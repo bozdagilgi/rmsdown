@@ -1,45 +1,24 @@
 #####SSD data anonymized version for public with figures
 
-
-####Load libraries and data ----
-
 ##Remove past activities
 
 rm(list = ls())
 
-##Load libraries
-
+####Load libraries and data ----
 
 # Install pacman if not already installed
 if(!require(pacman)) install.packages('pacman')
 
 # Load all required libraries using pacman
 pacman::p_load(
-  tidyverse,
-  dplyr,
-  tidyr,
-  rlang,
-  purrr,
-  magrittr,
-  expss,
-  srvyr,
-  readr,
-  labelled,
-  pastecs,
-  psych,
-  tableone,
-  outbreaks,
-  ggplot2,
-  unhcrthemes,
-  scales,
-  gt,
-  webshot2
-)
+  tidyverse, dplyr, tidyr, rlang, purrr, magrittr, expss, srvyr,
+  readr,labelled,pastecs,psych,tableone, outbreaks, ggplot2, unhcrthemes,
+  scales, gt,webshot2 )
 
 
 ##Set WD
 
-setwd("C:/Users/BOZDAG/OneDrive - UNHCR/Desktop/UNHCR/RBM/Standard report template/South Sudan")
+setwd("C:/Users/BOZDAG/OneDrive - UNHCR/Desktop/UNHCR/R projets/Standard report template/South Sudan")
 
 
 
@@ -72,6 +51,8 @@ main$citizenship <- ifelse(main$citizenship == "SDN", "SDN",
 
 ind <- ind %>%
   mutate(disability = factor(disability, levels = c(0, 1), labels = c("Non-disabled", "Disabled")))
+
+table(ind$disability)
 
 ###Gender - HH04
 ##ALREADY labelled
@@ -141,10 +122,80 @@ impact3_2b_stats <- survey_design_RMS_SSD_2023 %>%
     impact3_2b_cv = 100 * (impact3_2b_se / impact3_2b)
   )
 
-###Household level ----
+###Disability ----
+
+
+###Impact 3_2b with percentages only
+
+
+impact3_2b <- survey_design_RMS_SSD_2023 %>%
+  filter(!is.na(disability)) %>%
+  group_by(disability) %>%
+  summarise(
+    age_secondary_total = survey_total(age_secondary, na.rm = TRUE),
+    edu_secondary_total = survey_total(edu_secondary, na.rm = TRUE)
+  ) %>%
+  mutate(impact3_2b = round(edu_secondary_total / age_secondary_total, 4))
 
 
 
+
+##With statistical outputs
+
+
+impact3_2b_stats <- survey_design_RMS_SSD_2023 %>%
+  filter(!is.na(disability)) %>%
+  group_by(disability) %>%
+  summarise(
+    age_secondary_total = survey_total(age_secondary, vartype = "se"),
+    edu_secondary_total = survey_total(edu_secondary, vartype = "se")
+  ) %>%
+  mutate(
+    impact3_2b = round(edu_secondary_total / age_secondary_total, 4),
+    impact3_2b_se = sqrt(
+      (edu_secondary_total_se / edu_secondary_total)^2 +
+        (age_secondary_total_se / age_secondary_total)^2
+    ) * impact3_2b,
+    impact3_2b_ci = impact3_2b + c(-1.96, 1.96) * impact3_2b_se,
+    impact3_2b_cv = 100 * (impact3_2b_se / impact3_2b)
+  )
+
+
+
+###Impact 3_2a with percentages only
+
+
+impact3_2a <- survey_design_RMS_SSD_2023 %>%
+  filter(!is.na(disability)) %>%
+  group_by(disability) %>%
+  summarise(
+    age_primary_total = survey_total(age_primary, na.rm = TRUE),
+    edu_primary_total = survey_total(edu_primary, na.rm = TRUE)
+  ) %>%
+  mutate(impact3_2a = round(edu_primary_total / age_primary_total, 4))
+
+
+
+
+##With statistical outputs
+
+
+impact3_2b_stats <- survey_design_RMS_SSD_2023 %>%
+  filter(!is.na(disability)) %>%
+  group_by(disability) %>%
+  summarise(
+    age_secondary_total = survey_total(age_secondary, vartype = "se"),
+    edu_secondary_total = survey_total(edu_secondary, vartype = "se")
+  ) %>%
+  mutate(
+    impact3_2b = round(edu_secondary_total / age_secondary_total, 4),
+    impact3_2b_se = sqrt(
+      (edu_secondary_total_se / edu_secondary_total)^2 +
+        (age_secondary_total_se / age_secondary_total)^2
+    ) * impact3_2b,
+    impact3_2b_ci = impact3_2b + c(-1.96, 1.96) * impact3_2b_se,
+    impact3_2b_cv = 100 * (impact3_2b_se / impact3_2b)
+  )
 
 ###Randomly selected adult ----
 
