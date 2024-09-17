@@ -1,5 +1,8 @@
 #####SSD data anonymized version for public with figures
 
+
+###Document below to be used an example!
+
 ##Remove past activities
 
 rm(list = ls())
@@ -9,12 +12,31 @@ rm(list = ls())
 # Install pacman if not already installed
 if(!require(pacman)) install.packages('pacman')
 
+# Install the unhcrthemes package from GitHub
+install.packages("remotes")
+remotes::install_github("unhcr/unhcrthemes")
+
+
 # Load all required libraries using pacman
 pacman::p_load(
   tidyverse, dplyr, tidyr, rlang, purrr, magrittr, expss, srvyr,
   readr,labelled,pastecs,psych,tableone, outbreaks, ggplot2, unhcrthemes,
-  scales, gt,webshot2 )
+  scales, gt,webshot2, sjlabelled )
 
+
+##RUN below function
+
+
+labelled_chr2dbl <- function(x) {
+  varlab <- var_label(x)
+  vallab <- val_labels(x)
+  vallab <- setNames(as.numeric(vallab),
+                     names(vallab))
+  x <- as.numeric(as.character(x))
+  var_label(x) <- varlab
+  val_labels(x) <- vallab
+  x
+}
 
 ##Set WD
 
@@ -22,16 +44,17 @@ setwd("C:/Users/BOZDAG/OneDrive - UNHCR/Desktop/UNHCR/R projets/Standard report 
 
 
 
-##Load datasets 
+##Load datasets -- both datasets includes indicators already calculated and cleaned ( step 1 and 2 are complete)
 
 main<- read_csv("main.csv")
 ind <- read_csv("ind.csv")
 
 
-CreateTableOne(data = main) # Check sample and distribution
+CreateTableOne(data = main) # Check sample and distribution - HH level dataset
 
+CreateTableOne(data = ind)  # check sample and distribution - individual level dataset
 
-### Clean and anonymize the data ----
+### Cleaned data with indicators ----
 
 ind$citizenship <- ifelse(ind$citizenship == "SDN", "SDN",
                           ifelse(ind$citizenship == "XXX", "SSD", "SSD")
@@ -44,18 +67,128 @@ main$citizenship <- ifelse(main$citizenship == "SDN", "SDN",
 )
 ###Add labels for disaggregation variables
 
-###Age - HH07_cat2
 
+##For more guidance - https://unhcr365.sharepoint.com/:x:/r/teams/ResultsMonitoringSurveysRMS-RMSStandardReportTemplate/Shared%20Documents/Standard%20report%20template/RMS%20indicator%20table.xlsx?d=wf8ea2ac92eac4324bd42b5f248622cab&csf=1&web=1&e=wL2EHp
+
+
+
+###Age - HH07_cat
+
+table(ind$HH07_cat) # 4 categories
+table(ind$HH07_cat2) # under 18 / above 18
 
 ##Disability - disability
 
-ind <- ind %>%
-  mutate(disability = factor(disability, levels = c(0, 1), labels = c("Non-disabled", "Disabled")))
-
 table(ind$disability)
 
-###Gender - HH04
-##ALREADY labelled
+###Gender - HH04 -- already labelled 
+
+table(ind$HH04)
+
+
+###Population groups
+
+table(ind$pop_groups)
+
+
+#### Creating the survey design object without stratification ---- for individual and HH level datasets 
+RMS_SSD_2023_ind <- ind %>%
+  as_survey_design(
+    ids = NULL,           # Specify the column with cluster IDs
+    weights = NULL, # Specify the column with survey weights
+    nest = TRUE              # Use TRUE if PSUs are nested within clusters (optional, based on your survey design)
+  )
+
+
+RMS_SSD_2023_main <- main %>%
+  as_survey_design(
+    ids = NULL,           # Specify the column with cluster IDs
+    weights = NULL, # Specify the column with survey weights
+    nest = TRUE              # Use TRUE if PSUs are nested within clusters (optional, based on your survey design)
+  )
+
+
+### 2.2 Proportion of people residing in physically safe and secure settlements with access to basic facilities -----
+
+### Indicator calculations 
+
+##electricity 
+
+table(main$LIGHT01)
+table(main$LIGHT02)
+
+
+
+main <- main %>%
+  mutate(electricity = ifelse(LIGHT01 == "1" & LIGHT02 == "1" & LIGHT03 != "0", 1, 0)
+  ) %>%
+  mutate( electricity = labelled(electricity,
+                                 labels = c(
+                                   "Yes" = 1,
+                                   "No" = 0
+                                 ),
+                                 label = "Access to electricity"))
+
+table(main$electricity)
+
+
+###healthcare
+
+###Access to healthcare if household has any facility available excluding 'don't know' and 'other' 
+#within one hour distance (cannot be > 60) (walking or any other type of transport)
+
+
+main <- main %>%
+  mutate(healthcare = ifelse(HEA01 != "96" & HEA01 != "98" & HEA03 <= 60, 1, 0)
+  ) %>%
+  mutate( healthcare = labelled(healthcare,
+                                labels = c(
+                                  "Yes" = 1,
+                                  "No" = 0
+                                ),
+                                label = "Access to healthcare facility"))
+
+table(main$healthcare)
+
+
+###drinking water
+
+###Convert time variable to minutes only
+
+main <- main %>%
+  mutate(time_DWA=case_when(
+    DWA03a=="1"~ "1", DWA03a=="2"~"60") #convert hour into minutes
+  )
+
+main$time_DWA <- as.numeric(main$time_DWA)
+
+table(main$time_DWA)
+
+###Compute variable with above conditions
+
+main <- main %>%
+  mutate(time_tot=time_DWA*DWA03b
+  ) %>% 
+  mutate(dwa_cond1=case_when( time_tot > 30 ~ 0, 
+                              TRUE ~ 1) # reachable under 30 minutes or NA
+  ) %>% 
+  mutate(dwa_cond2=case_when(DWA01!="7" |DWA01 !="9" |DWA01 != "13" | DWA01 != "96" |DWA01 !="98" ~ 1,
+                             TRUE ~ 0) # improved source only
+  ) %>%
+  mutate(dwa_cond3=case_when(DWA02 == "3" ~ 0, 
+                             TRUE ~ 1) # in the dwelling/yard/plot
+  ) %>% 
+  mutate(drinkingwater=case_when(
+    ((dwa_cond1==1 | dwa_cond3==1) & dwa_cond2==1 ) ~ 1, TRUE ~ 0)
+  ) %>%
+  mutate(drinkingwater = labelled(drinkingwater,
+                                  labels = c(
+                                    "Yes" = 1,
+                                    "No" = 0
+                                  ),
+                                  label = "Access to drinking water"))
+
+table(main$drinkingwater)
 
 
 main <-main %>%
@@ -72,262 +205,541 @@ main <-main %>%
 
 
 
+###habitable shelter - updated use 3.2 and exclude SHEL05
+
+##First check the variables
+table(main$SHEL01)
+table(main$SHEL02)
+table(main$SHEL03)
+table(main$SHEL04)
+table(main$SHEL05)
+table(main$SHEL06)
+
+main$SHEL01 <- labelled_chr2dbl(main$SHEL01)
+main$SHEL02 <- labelled_chr2dbl(main$SHEL02)
+main$SHEL03 <- labelled_chr2dbl(main$SHEL03)
+main$SHEL04 <- labelled_chr2dbl(main$SHEL04)
+main$SHEL05 <- labelled_chr2dbl(main$SHEL05)
+main$SHEL06 <- labelled_chr2dbl(main$SHEL06)
 
 
 
 
-#### Creating the survey design object without stratification ----
-survey_design_RMS_SSD_2023 <- ind %>%
-  as_survey_design(
-    ids = NULL,           # Specify the column with cluster IDs
-    weights = NULL, # Specify the column with survey weights
-    nest = TRUE              # Use TRUE if PSUs are nested within clusters (optional, based on your survey design)
+main <- main %>%
+  mutate(across(starts_with("SHEL"), ~ifelse(. == 98, NA, .))) %>%
+  mutate(housing = case_when(
+    (SHEL01 == "1") & (SHEL02 == "1") & (SHEL05 == "1") & 
+      (SHEL03 == "0" ) & (SHEL04 == "0" ) & (SHEL06 == "0" ) ~ 1,
+    (SHEL01 == "0") | (SHEL02 == "0" ) | (SHEL05 == "0") |
+      (SHEL03 == "1") | (SHEL04 == "1") | (SHEL06 == "1" ) ~ 0,
+    TRUE ~ NA_integer_
+  ))
+
+table(main$housing)
+
+
+
+##Condition 2
+####Calculate crowding index - overcrowded when more than 3 persons share one room to sleep
+###Overcrowding may cause health issues, thus, not considered as physically safe
+
+
+table(main$hh_size_001)
+table(main$DWE05)
+
+
+main <- main %>%
+  mutate(crowding=hh_size_001/DWE05
+  ) %>%
+  mutate(dwe05_cat=case_when( ##if crowding <= 3, not overcrowded 
+    crowding <= 3 ~ 1, TRUE ~ 0)
   )
 
 
-##Individual level ----
+table(main$crowding)
+table(main$dwe05_cat)
 
-###Education only indicators ----
+###Combine both conditions for habitable housing -- exclude DWE01
 
+main <- main %>%
+  mutate(shelter=case_when(
+    dwe05_cat==1 & housing==1 ~ 1,
+    TRUE ~ 0
+  ))
 
-###Impact 3_2b with percentages only
-
-impact3_2b <- survey_design_RMS_SSD_2023 %>%
-  filter(!is.na(pop_groups)) %>%
-  group_by(pop_groups) %>%
-  summarise(
-    age_secondary_total = survey_total(age_secondary, na.rm = TRUE),
-    edu_secondary_total = survey_total(edu_secondary, na.rm = TRUE)
-  ) %>%
-  mutate(impact3_2b = round(edu_secondary_total / age_secondary_total, 4))
-
-
-##With statistical outputs
-
-
-impact3_2b_stats <- survey_design_RMS_SSD_2023 %>%
-  filter(!is.na(pop_groups)) %>%
-  group_by(pop_groups) %>%
-  summarise(
-    age_secondary_total = survey_total(age_secondary, vartype = "se"),
-    edu_secondary_total = survey_total(edu_secondary, vartype = "se")
-  ) %>%
-  mutate(
-    impact3_2b = round(edu_secondary_total / age_secondary_total, 4),
-    impact3_2b_se = sqrt(
-      (edu_secondary_total_se / edu_secondary_total)^2 +
-        (age_secondary_total_se / age_secondary_total)^2
-    ) * impact3_2b,
-    impact3_2b_ci = impact3_2b + c(-1.96, 1.96) * impact3_2b_se,
-    impact3_2b_cv = 100 * (impact3_2b_se / impact3_2b)
-  )
-
-###Disability ----
-
-
-###Impact 3_2b with percentages only
-
-
-impact3_2b <- survey_design_RMS_SSD_2023 %>%
-  filter(!is.na(disability)) %>%
-  group_by(disability) %>%
-  summarise(
-    age_secondary_total = survey_total(age_secondary, na.rm = TRUE),
-    edu_secondary_total = survey_total(edu_secondary, na.rm = TRUE)
-  ) %>%
-  mutate(impact3_2b = round(edu_secondary_total / age_secondary_total, 4))
+table(main$shelter)
 
 
 
 
-##With statistical outputs
+###safe environment 
+
+##Step 5. Safe and secure settlements are those with no risks and hazards like flooding, landslides, landmines, and close proximity to military installations and hazardous zones
+
+table(main$RISK01)
+table(main$RISK02)
 
 
-impact3_2b_stats <- survey_design_RMS_SSD_2023 %>%
-  filter(!is.na(disability)) %>%
-  group_by(disability) %>%
-  summarise(
-    age_secondary_total = survey_total(age_secondary, vartype = "se"),
-    edu_secondary_total = survey_total(edu_secondary, vartype = "se")
-  ) %>%
-  mutate(
-    impact3_2b = round(edu_secondary_total / age_secondary_total, 4),
-    impact3_2b_se = sqrt(
-      (edu_secondary_total_se / edu_secondary_total)^2 +
-        (age_secondary_total_se / age_secondary_total)^2
-    ) * impact3_2b,
-    impact3_2b_ci = impact3_2b + c(-1.96, 1.96) * impact3_2b_se,
-    impact3_2b_cv = 100 * (impact3_2b_se / impact3_2b)
-  )
+main <- main %>%
+  mutate(secure=case_when(
+    RISK01=="1" |  RISK02=="1" ~ 0,
+    TRUE ~ 1
+  ))
+
+table(main$secure)
 
 
 
-###Impact 3_2a with percentages only
+##Combine variables
+
+###Calculate impact indicator based on electricity, healthcare, drinkingwater, shelter and secure
+
+##Impact 2.2 is "1" if all services above are accessible
+
+main <-main %>%
+  mutate(impact2_2=case_when(
+    shelter==0 | electricity==0 | drinkingwater==0 | healthcare==0 | secure==0 ~ 0,
+    shelter==1 & electricity==1 & drinkingwater==1 & healthcare==1 & secure==1 ~ 1)
+  ) %>% 
+  mutate(impact2_2=labelled(impact2_2,
+                            labels =c(
+                              "Yes"=1,
+                              "No"=0
+                            ),
+                            label="Proportion of people residing in physically safe and secure settlements with access to basic facilities"))
 
 
-impact3_2a <- survey_design_RMS_SSD_2023 %>%
-  filter(!is.na(disability)) %>%
-  group_by(disability) %>%
-  summarise(
-    age_primary_total = survey_total(age_primary, na.rm = TRUE),
-    edu_primary_total = survey_total(edu_primary, na.rm = TRUE)
-  ) %>%
-  mutate(impact3_2a = round(edu_primary_total / age_primary_total, 4))
-
-
-
-
-##With statistical outputs
-
-
-impact3_2b_stats <- survey_design_RMS_SSD_2023 %>%
-  filter(!is.na(disability)) %>%
-  group_by(disability) %>%
-  summarise(
-    age_secondary_total = survey_total(age_secondary, vartype = "se"),
-    edu_secondary_total = survey_total(edu_secondary, vartype = "se")
-  ) %>%
-  mutate(
-    impact3_2b = round(edu_secondary_total / age_secondary_total, 4),
-    impact3_2b_se = sqrt(
-      (edu_secondary_total_se / edu_secondary_total)^2 +
-        (age_secondary_total_se / age_secondary_total)^2
-    ) * impact3_2b,
-    impact3_2b_ci = impact3_2b + c(-1.96, 1.96) * impact3_2b_se,
-    impact3_2b_cv = 100 * (impact3_2b_se / impact3_2b)
-  )
-
-###Randomly selected adult ----
+table(main$impact2_2)
 
 
 
-### 2.2 Proportion of PoCs residing in physically safe and secure settlements with access to basic facilities -----
+####Standard tables 
 
-### Figure ----
 
-impact2_2 <- main %>%
-  select(pop_groups, shelter, electricity, drinkingwater, secure, healthcare) %>%
+composite_impact2_2 <- main %>%
+  select(pop_groups, shelter, electricity, drinkingwater, secure, healthcare, impact2_2) %>%
   pivot_longer(cols = shelter:healthcare, names_to = "facility", values_to = "access") %>%
   group_by(pop_groups, facility) %>%
   summarise(percentage = mean(access, na.rm = TRUE) * 100) %>%
   ungroup()
 
 
-##Facility labels
 
-facility_labels <- c(
-  shelter = "Shelter",
-  electricity = "Electricity",
-  drinkingwater = "Drinking Water",
-  secure = "Security",
-  healthcare = "Healthcare"
+###Chart for above with all dimensions 
+
+
+composite_impact2_2 %>%
+  ggplot(aes(x = facility, y = percentage, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_unhcr_d() +
+  scale_y_continuous(limits = c(0, 100), expand = c(0, 0)) +
+  labs(
+    title = "Access to Facilities by Population Group",
+    x = "Facility",
+    y = "Percentage Access (%)",
+    fill = "Population Groups"
+  ) +
+  theme_unhcr()
+
+##Table by population groups
+
+impact2_2 <- RMS_SSD_2023_main %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Show results disaggregated by pop groups
+  summarise(                                         # put all variables here
+    var_name = "impact2_2",                          # name of the variable
+    num_obs_uw = unweighted(n()),                    # unweighted total count
+    denominator = survey_total(),                      # weighted total count
+    mean_value = survey_mean(impact2_2, vartype = c("ci", "se")),  # indicator value ( weighted) with CI and SE
+  )
+
+
+###Chart of impact 2_2 by pop groups
+
+ggplot(impact2_2, aes(x = pop_groups, y = mean_value, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  # Add labels for mean_value
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Impact 2.2",
+    x = "Population Groups",
+    y = "Mean Value with Standard Errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  )
+
+
+
+### 2.3 Proportion of people with access to health services -----
+
+##indicator calculations
+
+ind <- ind %>%
+  mutate(impact2_3=case_when(
+    HACC01=="1" & HACC03=="1" ~ 1,
+    HACC01=="0" ~ NA,
+    HACC01=="1" & HACC03=="0" & (HACC04_1 == "1" | HACC04_2 == "1" | HACC04_4 == "1" | HACC04_7 == "1" | HACC04_10 == "1" | HACC04_11 == "1" | 
+                                   HACC04_12 == "1" | HACC04_13 == "1") ~ 0 ,
+    HACC01=="1" & HACC03=="0" & (HACC04_3 == "1" | HACC04_5 == "1" | HACC04_6 == "1" | HACC04_8 == "1" | 
+                                   HACC04_9 == "1" | HACC04_96 == "1") ~ 1)
+  ) %>%
+  mutate(impact2_3=labelled(impact2_3,
+                            labels =c(
+                              "Yes"=1,
+                              "No"=0
+                            ),
+                            label="Proportion of people with access to health"))
+
+
+
+
+###Table by population groups
+
+impact2_3 <- RMS_SSD_2023_ind %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "impact2_3",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(impact2_3, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+
+
+##Chart for the indicator above
+
+
+
+
+ggplot(impact2_3, aes(x = pop_groups, y = mean_value, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Impact 2.3",
+    x = "Population Groups",
+    y = "Mean Value with standard errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  )
+
+
+#### Table and chart that shows results by age/sex/diversity
+
+
+
+impact2_3_AGD <- RMS_SSD_2023_ind %>%
+  filter(!is.na(HH04) & !is.na(disability) & !is.na(HH07_cat)) %>%                     # Exclude if HH07_cat is NA
+  group_by(HH07_cat, HH04, disability) %>%            # Group by Age, Gender, and Disability
+  summarise(                                       # Summarise to compute values
+    var_name = "impact2_3",                        # Name of the variable
+    num_obs_uw = unweighted(n()),                  # Unweighted total count
+    denominator = survey_total(),                  # Weighted total count
+    mean_value = survey_mean(impact2_3, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+
+
+####Chart with the AGD variables 
+
+ggplot(impact2_3_AGD, aes(x = HH04, y = mean_value, fill = disability)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  scale_fill_unhcr_d() +  # UNHCR color palette
+  facet_wrap(~ HH07_cat) +  # Create facets for each age group
+  labs(
+    title = "Impact 2.3 by gender, age and disability status",
+    x = "Gender",
+    y = "Mean Value",
+    fill = "Disability",
+    caption = "Note: The disability module does not include children under 5."  #
+  ) +
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for readability
+  )
+
+
+#### The reasons for not being able to access to health services 
+
+##add labels for not accessing the health services
+
+reasons_mapping <- c(
+  "HACC04_1" = "Health facility too far",
+  "HACC04_2" = "Medicine or health facility too expensive",
+  "HACC04_3" = "No treatment exists/Not necessary",
+  "HACC04_4" = "Don't know where to go",
+  "HACC04_5" = "No time",
+  "HACC04_6" = "Prefer other options",
+  "HACC04_7" = "Health facility does not accept new patients",
+  "HACC04_8" = "Don't trust modern medicine",
+  "HACC04_9" = "Don't trust doctors",
+  "HACC04_10" = "Administrative/documentation issues (certificates, service cards, etc.)",
+  "HACC04_11" = "Long waiting times",
+  "HACC04_12" = "Lack of medical supplies",
+  "HACC04_13" = "Health facility damaged/destroyed"
 )
 
+# Get the column names for HACC04_1 to HACC04_13
+reason_columns <- names(reasons_mapping)
 
-# Create the plot using UNHCR theme with 100% limit and labels by population group
-ggplot(impact2_2) +
-  geom_col(aes(
-    x = percentage,
-    y = fct_rev(factor(facility)),
-    fill = as.character(pop_groups)
-  ),
-  position = position_dodge(0.7),
-  width = 0.6
-  ) +
-  geom_text(aes(
-    x = percentage,
-    y = fct_rev(factor(facility)),
-    label = paste0(round(percentage, 0), "%"), #Change decimals to 0 to 1 for 0.1 decimal
-    group = pop_groups
-  ),
-  position = position_dodge(0.7),
-  vjust = -0.5,
-  size = 3
-  ) +
-  scale_fill_unhcr_d(palette = "pal_unhcr") +
+# Calculate the percentage of '1's for each column
+
+reasons_nohealthaccess <- RMS_SSD_2023_ind %>%
+  summarise(across(all_of(reason_columns), 
+                   ~ mean(. == 1, na.rm = TRUE) * 100,  # Calculate percentage of '1's ignoring NAs
+                   .names = "{col}")) %>%
+  pivot_longer(everything(), 
+               names_to = "Reason", 
+               values_to = "Percentage") %>%
+  mutate(Reason = reasons_mapping[Reason])  # Map column names to descriptive labels
+
+##Chart creation
+
+
+ggplot(reasons_nohealthaccess, aes(x = reorder(Reason, Percentage), y = Percentage, fill = Reason)) +
+  geom_bar(stat = "identity", width = 0.7) +
+  geom_text(aes(label = sprintf("%.1f%%", Percentage)), 
+            position = position_stack(vjust = 0.5), size = 3.5, angle = 1)  +  # Add percentage labels on bars
+  coord_flip() +  # Flip the axes for better readability
   labs(
-    title = "Impact 2.2 : Access to Basic Facilities by Population Groups",
-    x = "Percentage (%)",
-    y = "Facility",
-    fill = "Population Groups",
-    caption = "Source: RMS 2023 South Sudan\n© UNHCR, The UN Refugee Agency" #Change source 
+    title = "Percentage of Reasons for Not Accessing Health Services",
+    x = "Reasons",
+    y = "Percentage",
+    caption = "Note: This includes those who could not access to health services in the last 3 months" 
   ) +
-  scale_x_continuous(
-    limits = c(0, 100),
-    expand = expansion(c(0, 0.1)),
-    labels = label_number_si(suffix = "%")
-  ) +
-  scale_y_discrete(labels = scales::label_wrap(17)) +
-  theme_unhcr(
-    grid = "X",
-    axis = "y",
-    axis_title = "x"
-  ) +
-  scale_y_discrete(labels = facility_labels)
-
-### A final indicator value is called ' impact2_2' by pop_group, HH04, disability, and HH07_cat2 including percentages and CI along with the final value for impact2_2 shown as total. 
-
-# Table- ----
+  scale_fill_unhcr_d() +  # Use UNHCR color palette
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.y = element_text(size = 9),  # Adjust text size for readability
+    legend.position = "none"  # Remove the legend
+  )
 
 
 
-# Function to calculate percentages and confidence intervals
-calculate_percentage_ci <- function(data, group_var) {
-  data %>%
-    group_by(!!sym(group_var)) %>%
-    summarise(
-      total = n(),
-      impact2_2_yes = sum(impact2_2 == 1, na.rm = TRUE),
-      percentage = 100 * impact2_2_yes / total,
-      ci_lower = percentage - qnorm(0.975) * sqrt((percentage / 100) * (1 - percentage / 100) / total) * 100,
-      ci_upper = percentage + qnorm(0.975) * sqrt((percentage / 100) * (1 - percentage / 100) / total) * 100,
-      ci = paste0("(", round(ci_lower, 2), ", ", round(ci_upper, 2), ")")
-    ) %>%
-    select(!!sym(group_var), total, percentage, ci, impact2_2_yes)
-}
+###### Empowering Communities and Achieving Gender Equality
 
-# List of grouping variables
-group_vars <- c("pop_groups", "HH04", "disability", "HH07_cat2")
+### 3.2a Proportion of children and young people enrolled in primary education ----
 
-# Calculate percentages and CIs for each group and combine them into one table
-final_table <- bind_rows(lapply(group_vars, function(var) {
-  calculate_percentage_ci(main, var) %>% mutate(group = var)
-}))
+###This indicator comes from the individual dataset
 
-# Add a total row for the overall impact2_2
-total_stats <- main %>%
+ind$EDU01 <- labelled_chr2dbl(ind$EDU01)
+ind$EDU02 <- labelled_chr2dbl(ind$EDU02)
+ind$EDU03 <- labelled_chr2dbl(ind$EDU03)
+
+
+
+ind <- ind %>% 
+  mutate(edu_primary = case_when
+         ( EDU01 == 1 & EDU02 == 1 & EDU03 == 2 ~ 1, EDU01 == 0 | EDU02 == 0 ~ 0, 
+           TRUE ~ 0) 
+  ) %>%
+  mutate(age_primary = case_when
+         ( HH07 >= 6 & HH07 <=13 ~ 1, ###!!!!!ADJUST AGE GROUPS FOR EACH EDUCATIONAL LEVEL
+           TRUE ~ 0) )
+
+
+###Results of the indicator table
+
+
+
+impact3_2a <- RMS_SSD_2023_ind %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop_groups is NA
+  group_by(pop_groups) %>%                          # Group by pop_groups
   summarise(
-    total = n(),
-    impact2_2_yes = sum(impact2_2 == 1, na.rm = TRUE),
-    percentage = 100 * impact2_2_yes / total,
-    ci_lower = percentage - qnorm(0.975) * sqrt((percentage / 100) * (1 - percentage / 100) / total) * 100,
-    ci_upper = percentage + qnorm(0.975) * sqrt((percentage / 100) * (1 - percentage / 100) / total) * 100,
-    ci = paste0("(", round(ci_lower, 2), ", ", round(ci_upper, 2), ")"),
-    group = "Total"
+    var_name = "impact3_2a",                        # Name of the variable
+    num_obs_uw = survey_total(!is.na(age_primary), na.rm = TRUE),  # Unweighted total count
+    denominator = survey_total(edu_primary, na.rm = TRUE),         # Weighted total count
+    edu_primary_total = survey_total(edu_primary, na.rm = TRUE),   # Total for edu_primary
+    age_primary_total = survey_total(age_primary, na.rm = TRUE)    # Total for age_primary
+  ) %>%
+  mutate(
+    mean_value = round(edu_primary_total / age_primary_total, 4)  # Calculate the mean value
   )
 
 
-# Combine with the final table
-final_table <- bind_rows(final_table, total_stats)
+###Table with gender and disability included for the chart
 
-# Create the table using gt
-gt_table <- final_table %>%
-  gt() %>%
-  tab_header(
-    title = "Impact Analysis Table",
-    subtitle = "Percentage and Confidence Intervals by Group"
+
+
+impact3_2a_AGD <- RMS_SSD_2023_ind %>%
+  filter(!is.na(pop_groups) & !is.na(disability) & !is.na(HH04)) %>%                     # Exclude if pop_groups is NA
+  group_by(pop_groups,disability,HH04) %>%                          # Group by pop_groups
+  summarise(
+    var_name = "impact3_2a",                        # Name of the variable
+    num_obs_uw = survey_total(!is.na(age_primary), na.rm = TRUE),  # Unweighted total count
+    denominator = survey_total(edu_primary, na.rm = TRUE),         # Weighted total count
+    edu_primary_total = survey_total(edu_primary, na.rm = TRUE),   # Total for edu_primary
+    age_primary_total = survey_total(age_primary, na.rm = TRUE)    # Total for age_primary
   ) %>%
-  fmt_number(
-    columns = vars(percentage),
-    decimals = 2
-  ) %>%
-  cols_label(
-    group = "Group",
-    impact2_2_yes = "Count (Yes)",
-    total = "Total",
-    percentage = "Percentage (%)",
-    ci = "95% CI"
+  mutate(
+    mean_value = round(edu_primary_total / age_primary_total, 4)  # Calculate the mean value
   )
 
-# Export the table as a JPG file
-gtsave(gt_table, "Impact_Analysis_Table.pdf")
+
+
+###Chart for the above table
+
+
+ggplot(impact3_2a_AGD, aes(x = HH04, y = mean_value, fill = disability)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.7) +
+  geom_text(aes(label = sprintf("%.2f", mean_value)), 
+            position = position_dodge(width = 0.7), vjust = -0.5, size = 3) +  # Add values on bars
+  facet_wrap(~ pop_groups) +  # Create separate plots for each pop_group
+  labs(
+    title = "Enrollment in primary education by Age, Gender, and Population Groups",
+    x = "Gender ",
+    y = "Proportion of Education Level",
+    fill = "Disability Status"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for readability
+  )
+
+
+
+### 3.2b Proportion of children and young people enrolled in secondary education ----
+
+
+
+###This indicator comes from the individual dataset
+
+###Include if they are attending secondary or secondary -technical and vocational
+ind$EDU01 <- labelled_chr2dbl(ind$EDU01)
+ind$EDU02 <- labelled_chr2dbl(ind$EDU02)
+ind$EDU03 <- labelled_chr2dbl(ind$EDU03)
+
+ind <- ind %>%
+  mutate(edu_secondary=case_when(
+    EDU01==1 & EDU02==1 & (EDU03==3 | EDU03==4) ~ 1, EDU01==0 | EDU02==0 ~ 0, 
+    TRUE ~ 0)
+  ) %>%
+  mutate(age_secondary=case_when(
+    HH07 >= 11 & HH07 <=18 ~ 1, TRUE ~ NA_real_)) ###!!!!!ADJUST AGE GROUPS FOR EACH EDUCATIONAL LEVEL   
+
+
+
+###Results of the indicator table
+
+
+impact3_2b <- RMS_SSD_2023_ind %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop_groups is NA
+  group_by(pop_groups) %>%                          # Group by pop_groups
+  summarise(
+    var_name = "impact3_2b",                        # Name of the variable 
+    num_obs_uw = survey_total(!is.na(age_secondary), na.rm = TRUE),  # Unweighted total count for secondary age
+    denominator = survey_total(edu_secondary, na.rm = TRUE),         # Weighted total count for secondary education
+    edu_secondary_total = survey_total(edu_secondary, na.rm = TRUE), # Total for secondary education
+    age_secondary_total = survey_total(age_secondary, na.rm = TRUE)  # Total for secondary age
+  ) %>%
+  mutate(
+    mean_value = round(edu_secondary_total / age_secondary_total, 4)  # Calculate the mean value
+  )
+
+
+###Table with gender and disability included for the chart
+
+
+impact3_2b_AGD <- RMS_SSD_2023_ind %>%
+  filter(!is.na(pop_groups) & !is.na(disability) & !is.na(HH04)) %>%  # Exclude if pop_groups, disability, or HH04 is NA
+  group_by(pop_groups, disability, HH04) %>%                          # Group by pop_groups, disability, and HH04
+  summarise(
+    var_name = "impact3_2b",                                          # Name of the variable (changed to impact3_2b)
+    num_obs_uw = survey_total(!is.na(age_secondary), na.rm = TRUE),   # Unweighted total count for secondary age
+    denominator = survey_total(edu_secondary, na.rm = TRUE),          # Weighted total count for secondary education
+    edu_secondary_total = survey_total(edu_secondary, na.rm = TRUE),  # Total for secondary education
+    age_secondary_total = survey_total(age_secondary, na.rm = TRUE)   # Total for secondary age
+  ) %>%
+  mutate(
+    mean_value = round(edu_secondary_total / age_secondary_total, 4)  # Calculate the mean value
+  )
+
+
+
+###Chart for the above table
+
+ggplot(impact3_2b_AGD, aes(x = HH04, y = mean_value, fill = disability)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.7) +
+  geom_text(aes(label = sprintf("%.2f", mean_value)), 
+            position = position_dodge(width = 0.7), vjust = -0.5, size = 3) +  # Add values on bars
+  facet_wrap(~ pop_groups) +  # Create separate plots for each pop_group
+  labs(
+    title = "Enrollment in Secondary Education by Age, Gender, and Population Groups",
+    x = "Gender",
+    y = "Proportion of Education Level",
+    fill = "Disability Status"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for readability
+  )
+
+
+
+
+### 3.3 Proportion of PoC feeling safe walking alone in their neighborhood ----- 
+
+
+
+
+
+
+## Access to Territory, Registration and Documentation
+
+1.2 Proportion of children \<5 years whose birth have been registered with a civil authority.
+1.3 Proportion of PoC with legally recognized identity documents or credentials
+
+## Gender-based Violence
+
+4.1 Proportion of PoC who know where to access available GBV services.
+4.2 Proportion of PoC who do not accept violence against women.
+
+## Child Protection
+
+5.2 Proportion of children who participate in community-based child protection programmes.
+
+## Well-being and Basic Needs
+
+8.2 Proportion of PoC with primary reliance on clean (cooking) fuels and technology.
+
+## Sustainable housing and Settlements
+
+9.1 Proportion of PoC living in habitable and affordable housing.
+9.2 Proportion of PoC that have energy to ensure lighting.
+
+## Healthy Lives
+
+10.1 Proportion of children 9mo-5years who have received measles vaccination.
+10.2 Proportion of births attended by skilled health personnel.
+
+## Clean Water,Sanitation and Hygiene
+
+12.1 Proportion of PoC using at least basic drinking water services.
+12.2 Proportion of PoC with access to a safe household toilet.
+
+## Self Reliance, Economic Inclusion and Livelihoods
+
+13.1 Proportion of PoC with an account at a bank or other financial institution or with a mobile-money service provider.
+13.2 Proportion of PoC who self-report positive changes in their income compared to previous year.
+13.3 Proportion of PoC (working age) who are unemployed.
+
+## Local Integration and other Local Solutions
+
+16.1 Proportion of PoC with secure tenure rights and/or property rights to housing and/or land.
+16.2 Proportion of PoC covered by social protection floors/systems.
+
+####FINAL TABLE
+
