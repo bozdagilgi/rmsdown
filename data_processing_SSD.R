@@ -81,6 +81,13 @@ table(ind$HH07_cat2) # under 18 / above 18
 
 table(ind$disability)
 
+main<- main %>%
+  mutate(disability = factor(disability, levels = c(0, 1), labels = c("Non-disabled", "Disabled")))
+
+
+table(main$disability)
+
+
 ###Gender - HH04 -- already labelled 
 
 table(ind$HH04)
@@ -692,10 +699,107 @@ ggplot(impact3_2b_AGD, aes(x = HH04, y = mean_value, fill = disability)) +
 
 ### 3.3 Proportion of PoC feeling safe walking alone in their neighborhood ----- 
 
+###Indicator calculations
+
+main <- main %>%
+  mutate(impact3_3=case_when(
+    SAF01==1 | SAF01==2 ~ 1,
+    SAF01==3 | SAF01==4 ~ 0 , 
+    SAF01==98 | SAF01==99 ~ NA_real_)
+  ) %>% 
+  mutate(impact3_3=labelled(impact3_3,
+                            labels =c(
+                              "Yes"=1,
+                              "No"=0
+                            ),
+                            label="Proportion of people that feel safe walking alone in their neighbourhood after dark"))
 
 
 
 
+###Table standard 
+
+
+impact3_3 <- RMS_SSD_2023_main %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "impact3_3",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(impact3_3, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+
+
+##Chart for the indicator above
+
+
+
+ggplot(impact3_3, aes(x = pop_groups, y = mean_value, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Impact 3.3",
+    x = "Population Groups",
+    y = "Mean Value with standard errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  )
+
+
+#### Table and chart that shows results by age/sex/diversity
+
+impact3_3_AGD <- RMS_SSD_2023_main %>%
+  filter(!is.na(HH04) & !is.na(disability) & !is.na(HH07_cat) ) %>%  # Exclude HH07_cat categories 1, 2, and 5
+  group_by(HH07_cat, HH04, disability) %>%
+  summarise(
+    var_name = "impact3_3",                                      # Name of the variable
+    num_obs_uw = survey_total(!is.na(impact3_3), vartype = NULL),  # Unweighted total count
+    denominator = survey_total(),                                # Weighted total count
+    mean_value = survey_mean(impact3_3, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with CI and SE
+  )
+
+#impact3_3_AGD <- impact3_3_AGD %>% ##delete unwanted age groups
+ # filter(!(HH07_cat %in% c("Under 5", "5-17")))  
+
+#impact3_3_AGD <- impact3_3_AGD  %>%
+ # mutate(disability = factor(disability, levels = c(0, 1), labels = c("Non-disabled", "Disabled")))
+
+
+####Chart with the AGD variables 
+
+
+navy_palette <- c("#E0E9FE", "#B8C9EE", "#8395B9", "#506489", "#18375F")
+red_palette <- c(unhcr_pal(12, "pal_red"))
+
+
+
+ggplot(impact3_3_AGD, aes(x = disability, y = mean_value, fill = HH04)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.7) +  # Grouped bar chart
+  geom_text(aes(label = sprintf("%.2f", mean_value)), 
+            position = position_dodge(width = 0.7), vjust = -0.5, size = 3.5) +  # Add values on bars
+  scale_fill_manual(values = c(navy_palette[4], red_palette[2])) +  # Apply custom color palette
+  facet_wrap(~ HH07_cat) +  # Create facets for each age group
+  labs(
+    title = "Impact 3.3 by Gender, Age, and Disability Status",
+    x = "Disability Status",
+    y = "Mean Value",
+    fill = "Gender",
+    caption = "Note: Only 18 and above"
+  ) +
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +  # Limit the y-axis from 0 to 1
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels for readability
+    axis.text.y = element_text(size = 10)  # Adjust y-axis label size for readability
+  )
 
 ## Access to Territory, Registration and Documentation
 
