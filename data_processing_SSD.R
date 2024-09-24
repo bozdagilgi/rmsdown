@@ -497,42 +497,49 @@ reasons_mapping <- c(
   "HACC04_13" = "Health facility damaged/destroyed"
 )
 
-# Get the column names for HACC04_1 to HACC04_13
-reason_columns <- names(reasons_mapping)
-
-# Calculate the percentage of '1's for each column
-
-reasons_nohealthaccess <- RMS_SSD_2023_ind %>%
-  summarise(across(all_of(reason_columns), 
-                   ~ mean(. == 1, na.rm = TRUE) * 100,  # Calculate percentage of '1's ignoring NAs
-                   .names = "{col}")) %>%
-  pivot_longer(everything(), 
+hacc_percentages <- ind %>%
+  summarise(
+    HACC04_1 = mean(HACC04_1 == 1, na.rm = TRUE) * 100,
+    HACC04_2 = mean(HACC04_2 == 1, na.rm = TRUE) * 100,
+    HACC04_3 = mean(HACC04_3 == 1, na.rm = TRUE) * 100,
+    HACC04_4 = mean(HACC04_4 == 1, na.rm = TRUE) * 100,
+    HACC04_5 = mean(HACC04_5 == 1, na.rm = TRUE) * 100,
+    HACC04_6 = mean(HACC04_6 == 1, na.rm = TRUE) * 100,
+    HACC04_7 = mean(HACC04_7 == 1, na.rm = TRUE) * 100,
+    HACC04_8 = mean(HACC04_8 == 1, na.rm = TRUE) * 100,
+    HACC04_9 = mean(HACC04_9 == 1, na.rm = TRUE) * 100,
+    HACC04_10 = mean(HACC04_10 == 1, na.rm = TRUE) * 100,
+    HACC04_11 = mean(HACC04_11 == 1, na.rm = TRUE) * 100,
+    HACC04_12 = mean(HACC04_12 == 1, na.rm = TRUE) * 100,
+    HACC04_13 = mean(HACC04_13 == 1, na.rm = TRUE) * 100
+  ) %>%
+  pivot_longer(cols = everything(), 
                names_to = "Reason", 
                values_to = "Percentage") %>%
   mutate(Reason = reasons_mapping[Reason])  # Map column names to descriptive labels
 
+
+
 ##Chart creation
 
 
-ggplot(reasons_nohealthaccess, aes(x = reorder(Reason, Percentage), y = Percentage, fill = Reason)) +
+ggplot(hacc_percentages, aes(x = reorder(Reason, Percentage), y = Percentage, fill = Reason)) +
   geom_bar(stat = "identity", width = 0.7) +
   geom_text(aes(label = sprintf("%.1f%%", Percentage)), 
-            position = position_stack(vjust = 0.5), size = 3.5, angle = 1)  +  # Add percentage labels on bars
+            position = position_stack(vjust = 0.5), size = 3.5) +  # Add percentage labels on bars
   coord_flip() +  # Flip the axes for better readability
   labs(
-    title = "Percentage of Reasons for Not Accessing Health Services",
-    x = "Reasons",
+    title = "Reasons for Not Accessing Health Services",
+    x = "Reason",
     y = "Percentage",
-    caption = "Note: This includes those who could not access to health services in the last 3 months" 
+    caption = "Note: Percentages calculated independently for each reason."
   ) +
   scale_fill_unhcr_d() +  # Use UNHCR color palette
   theme_unhcr() +  # Apply UNHCR theme
   theme(
     axis.text.y = element_text(size = 9),  # Adjust text size for readability
-    legend.position = "none"  # Remove the legend
+    legend.position = "none"  # Remove the legend for simplicity
   )
-
-
 
 ###### Empowering Communities and Achieving Gender Equality
 
@@ -757,7 +764,7 @@ ggplot(impact3_3, aes(x = pop_groups, y = mean_value, fill = pop_groups)) +
 #### Table and chart that shows results by age/sex/diversity
 
 impact3_3_AGD <- RMS_SSD_2023_main %>%
-  filter(!is.na(HH04) & !is.na(disability) & !is.na(HH07_cat) ) %>%  # Exclude HH07_cat categories 1, 2, and 5
+  filter(!is.na(HH04) & !is.na(disability) & !is.na(HH07_cat) & HH07 > 18) %>%  # Exclude HH07_cat categories 1, 2, and 5
   group_by(HH07_cat, HH04, disability) %>%
   summarise(
     var_name = "impact3_3",                                      # Name of the variable
@@ -801,19 +808,709 @@ ggplot(impact3_3_AGD, aes(x = disability, y = mean_value, fill = HH04)) +
     axis.text.y = element_text(size = 10)  # Adjust y-axis label size for readability
   )
 
+
+
+
+
+### 1.2 Proportion of children  under 5 years whose birth have been registered with a civil authority ----
 ## Access to Territory, Registration and Documentation
 
-1.2 Proportion of children \<5 years whose birth have been registered with a civil authority.
-1.3 Proportion of PoC with legally recognized identity documents or credentials
 
+# ind$REG03 - birth certificate
+# ind$REG04 - birth has been registered
+
+##Calculate children who has a birth certificate
+
+ind <- ind %>%
+  mutate(birthCertificate=case_when(
+    REG03==0 | REG03==98 ~ 0, REG03==1 ~ 1)
+  ) %>%
+  mutate(birthCertificate=labelled(birthCertificate,
+                                   labels=c(
+                                     'Yes'=1,
+                                     'No'=0
+                                   ),
+                                   label="Children under 5 with a birth certificate"))
+
+##Calculate children who has been registered with civil authorities
+
+ind <- ind %>%
+  mutate(birthRegistered=case_when(
+    REG04==0 | REG04==98 ~ 0, REG04==1 ~ 1, REG04==99 ~NA_real_)
+  ) %>%
+  mutate(birthRegistered=labelled(birthRegistered,
+                                  labels=c(
+                                    'Yes'=1,
+                                    'No'=0
+                                  ),
+                                  label="Children under 5 birth registered with civil authorities"))
+
+
+##if the birth is registered or child has a birth certificate
+
+
+ind <- ind %>%
+  mutate(outcome1_2=case_when(
+    (birthRegistered==1 | birthCertificate==1) 
+    & HH07 <5 ~ 1, 
+    (birthRegistered==0 & birthCertificate==0) 
+    & HH07 <5 ~ 0)
+  ) %>%
+  mutate(outcome1_2=labelled(outcome1_2,
+                             labels=c(
+                               'Yes'=1,
+                               'No'=0
+                             ),
+                             label="Proportion of children under 5 years of age whose births have been registered with a civil authority"))
+
+
+
+
+
+###Table 
+
+
+outcome1_2 <- RMS_SSD_2023_ind %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "outcome1_2",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(impact3_3, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+
+
+##Table with disability and gender
+
+
+outcome1_2_AGD <- RMS_SSD_2023_ind %>%
+  filter(!is.na(HH04) & !is.na(disability) & !is.na(pop_groups) & HH07 < 5 ) %>%  # Exclude HH07_cat categories 1, 2, and 5
+  group_by(HH07_cat, HH04, pop_groups) %>%
+  summarise(
+    var_name = "outcome1_2",                                      # Name of the variable
+    num_obs_uw = survey_total(!is.na(impact3_3), vartype = NULL),  # Unweighted total count
+    denominator = survey_total(),                                # Weighted total count
+    mean_value = survey_mean(impact3_3, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with CI and SE
+  )
+
+
+##Chart with pop groups
+
+gender_colors <- c("Male" = "#8395B9", "Female" = "#E0E9FE")
+
+
+ggplot(outcome1_2_AGD, aes(x = HH04, y = mean_value, fill = HH04)) +  # Fill mapped to HH04 for gender
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.7) +
+  geom_text(aes(label = sprintf("%.2f", mean_value)), 
+            position = position_dodge(width = 0.7), vjust = -0.5, size = 3) +  # Add values on bars
+  facet_wrap(~ pop_groups) +  # Create separate plots for each population group
+  labs(
+    title = "Outcome 1.2 by Population Groups and Gender",
+    x = "Gender",
+    y = "Proportion of Children that registered",
+    caption = "Note: Only children under 5"
+  ) +
+  scale_fill_manual(values = gender_colors) +  # Apply custom colors for male and female
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for readability
+  )
+
+
+
+### 1.3 Proportion of PoC with legally recognized identity documents or credentials -----
+
+###Calculate valid identity documents for under 5 with REG05 and REG06 variables
+
+ind$REG05a <- labelled_chr2dbl(ind$REG05a) # passport
+ind$REG05b <- labelled_chr2dbl(ind$REG05b) # civil/government issued ID
+ind$REG05c <- labelled_chr2dbl(ind$REG05c) # residency permit
+ind$REG05d <- labelled_chr2dbl(ind$REG05d) # statelessness documentation
+ind$REG05e <- labelled_chr2dbl(ind$REG05e) # household card of address/family book
+ind$REG05f <- labelled_chr2dbl(ind$REG05f) # social security card
+ind$REG06 <- labelled_chr2dbl(ind$REG06) # any other document establishes identity
+
+#ind$REG05a - passport
+#ind$REG05b - civil/government issued ID
+#ind$REG05c - residency permit
+#ind$REG05d - statelessness documentation
+#ind$REG05e - household card of address/family book
+#ind$REG05f - social security card
+#ind$REG06 - any other document establishes identity
+#add birth certificate as additional document from REG03
+
+#Make sure to delete REG05e below from the script if you don't have any stateless 
+
+ind <- ind %>%
+  mutate(document_under5=case_when(
+    REG05a==1 | REG05b==1 | REG05c==1 | REG05d==1 | REG05e==1 | REG05f==1 |REG06==1 | REG03==1 ~ 1, 
+    REG05a!=1 & REG05b!=1 & REG05c!=1 & REG05d!=1 & REG05e!=1 & REG05f!=1 & REG06!=1 & REG03!=1 ~ 0, TRUE ~ NA_real_
+  ))
+
+###Calculate  valid identity documents for above 5 with REG01 and REG02 variables
+
+ind$REG01a <- labelled_chr2dbl(ind$REG01a) # passport
+ind$REG01b <- labelled_chr2dbl(ind$REG01b) # birth certificate
+ind$REG01c <- labelled_chr2dbl(ind$REG01c) # civil/ government issued ID
+ind$REG01d <- labelled_chr2dbl(ind$REG01d) # residency permit
+ind$REG01e <- labelled_chr2dbl(ind$REG01e) # statelessness documentation
+ind$REG01f <- labelled_chr2dbl(ind$REG01f) # household card of address/family book
+ind$REG01g <- labelled_chr2dbl(ind$REG01g) # social security card
+ind$REG02 <- labelled_chr2dbl(ind$REG02) # any other document establishes identity
+
+#ind$REG01a # passport
+#ind$REG01b # birth certificate
+#ind$REG01c # civil/ government issued ID
+#ind$REG01d # residency permit
+#ind$REG01e # statelessness documentation
+#ind$REG01f # household card of address/family book
+#ind$REG01g # social security card
+#ind$REG02 # any other document establishes identity
+
+#Make sure to delete REG01e below from the script if you don't have any stateless   
+
+ind <- ind %>%
+  mutate(document_above5=case_when(
+    REG01a==1 | REG01b==1 | REG01c==1 | REG01d==1 | REG01e==1 | REG01f==1 | REG01g==1 |REG02==1 ~ 1,
+    REG01a!=1 & REG01b!=1 & REG01c!=1 & REG01d!=1 & REG01e!=1 & REG01f!=1 & REG01g!=1 & REG02!=1 ~ 0, TRUE ~ NA_real_)
+    
+    ##Combine both age groups
+  ) %>%
+  mutate(outcome1_3=case_when(
+    (document_above5==1 | document_under5==1) ~ 1,  
+    (document_above5==0 | document_under5==0) ~ 0)
+  ) %>%
+  mutate(outcome1_3=labelled(outcome1_3,
+                             labels=c(
+                               'Yes'=1,
+                               'No'=0
+                             ),
+                             label="Proportion of people with legally recognized identity documents or credentials"))
+
+
+###Table by population groups
+
+outcome1_3 <- RMS_SSD_2023_ind %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "outcome1_3",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(outcome1_3, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+
+
+##Chart for the indicator above
+
+
+
+
+ggplot(outcome1_3, aes(x = pop_groups, y = mean_value, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Outcome 1.3",
+    x = "Population Groups",
+    y = "Mean Value with standard errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  )
+
+
+#### Table and chart that shows results by age/sex/diversity
+
+
+
+outcome1_3_AGD <- RMS_SSD_2023_ind %>%
+  filter(!is.na(HH04) & !is.na(disability) & !is.na(HH07_cat)) %>%                     # Exclude if HH07_cat is NA
+  group_by(HH07_cat, HH04, disability) %>%            # Group by Age, Gender, and Disability
+  summarise(                                       # Summarise to compute values
+    var_name = "outcome1_3",                        # Name of the variable
+    num_obs_uw = unweighted(n()),                  # Unweighted total count
+    denominator = survey_total(),                  # Weighted total count
+    mean_value = survey_mean(outcome1_3, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+
+
+####Chart with the AGD variables 
+
+ggplot(outcome1_3_AGD, aes(x = HH04, y = mean_value, fill = disability)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.7) +  # Grouped bar chart
+  geom_text(aes(label = sprintf("%.2f", mean_value)), 
+            position = position_dodge(width = 0.7), vjust = -0.5, size = 3) +  # Add values on top of bars
+  scale_fill_unhcr_d() +  # Apply UNHCR color palette
+  facet_wrap(~ HH07_cat) +  # Create facets for each age group
+  labs(
+    title = "Outcome 1.3 by Gender, Age, and Disability Status",
+    x = "Gender",
+    y = "Mean Value",
+    fill = "Disability",
+    caption = "Note: The disability module does not include children under 5."
+  ) +
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels for readability
+    axis.text.y = element_text(size = 10)  # Adjust y-axis label size for readability
+  )
+
+#### The identity documents in detail 
+
+
+ind$REG01a <- labelled_chr2dbl(ind$REG01a) # passport
+ind$REG01b <- labelled_chr2dbl(ind$REG01b) # birth certificate
+ind$REG01c <- labelled_chr2dbl(ind$REG01c) # civil/ government issued ID
+ind$REG01d <- labelled_chr2dbl(ind$REG01d) # residency permit
+ind$REG01e <- labelled_chr2dbl(ind$REG01e) # statelessness documentation
+ind$REG01f <- labelled_chr2dbl(ind$REG01f) # household card of address/family book
+ind$REG01g <- labelled_chr2dbl(ind$REG01g) # social security card
+ind$REG02 <- labelled_chr2dbl(ind$REG02) # any other document establishes identity
+
+###define labels 
+
+identity_documents <- c(
+  "REG01a" = "Passport",
+  "REG01b" = "Birth certificate",
+  "REG01c" = "Civil/ government issued ID",
+  "REG01d" = "Residency permit",
+  "REG01e" = "Statelessness documentation",
+  "REG01f" = "Household card of address/family book",
+  "REG01g" = "Social security card",
+  "REG02" = "Any other document"
+)
+
+# Calculate the percentage of '1's for each identity document
+
+
+identity_document_percentages <- RMS_SSD_2023_ind %>%
+  summarise(across(c(REG01a, REG01b, REG01c, REG01d, REG01e, REG01f, REG01g, REG02),
+                   ~ mean(. == 1, na.rm = TRUE) * 100)) %>%
+  pivot_longer(cols = everything(), 
+               names_to = "Document", 
+               values_to = "Percentage") %>%
+  mutate(Document = identity_documents[Document])  # Map column names to descriptive labels
+
+
+# Create the bar chart
+ggplot(identity_document_percentages, aes(x = reorder(Document, Percentage), y = Percentage, fill = Document)) +
+  geom_bar(stat = "identity", width = 0.7) +
+  geom_text(aes(label = sprintf("%.1f%%", Percentage)), 
+            position = position_stack(vjust = 0.5), size = 3.5) +  # Add percentage labels on bars
+  coord_flip() +  # Flip the axes for better readability
+  labs(
+    title = "Percentage of Individuals Holding Identity Documents",
+    x = "Identity Document",
+    y = "Percentage",
+    caption = "Note: Percentages are calculated independently for each document for individuals 5 and above."
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.y = element_text(size = 9),  # Adjust text size for readability
+    legend.position = "none"  # Remove the legend for simplicity
+  )
+
+
+
+### 4.1 Proportion of PoC who know where to access available GBV services.-----
+
+##indicator calculation
+
+main$GBV01a <- labelled_chr2dbl(main$GBV01a) # health services
+main$GBV01b <- labelled_chr2dbl(main$GBV01b) # psycho-social services
+main$GBV01c <- labelled_chr2dbl(main$GBV01c) # safety and security services
+main$GBV01d <- labelled_chr2dbl(main$GBV01d) # legal assistance
+
+
+
+main <- main %>%
+  mutate(outcome4_1 = case_when(
+    as.character(GBV01a) == "1" | as.character(GBV01b) == "1" ~ "1",  # If GBV01a or GBV01b is "1", then set to "1"
+    all(c(GBV01a, GBV01b, GBV01c, GBV01d) == 98) ~ NA_character_,  # If all are 98, then set to NA
+    TRUE ~ "0"  # For the rest, set to "0"
+  )) %>%
+  mutate(outcome4_1=labelled(outcome4_1,
+                             labels=c(
+                               'Yes'="1",
+                               "No"="0"
+                             ),
+                             label="Proportion of people who know where to access available GBV service"
+  ))
+
+######Table standard 
+
+
+outcome4_1 <- RMS_SSD_2023_main %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "outcome4_1",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(outcome4_1, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+
+
+##Chart for the indicator above
+
+
+
+ggplot(outcome4_1, aes(x = pop_groups, y = mean_value, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Outcome 4.1",
+    x = "Population Groups",
+    y = "Mean value with standard errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  )
+
+
+#### Table and chart that shows results by age/sex/diversity
+
+outcome4_1_AGD <- RMS_SSD_2023_main %>%
+  filter(!is.na(HH04) & !is.na(disability) & !is.na(HH07_cat) & HH07 > 18) %>%  # only 18 and above 
+  group_by(HH07_cat, HH04, disability) %>%
+  summarise(
+    var_name = "outcome4_1",                                      # Name of the variable
+    num_obs_uw = survey_total(!is.na(outcome4_1), vartype = NULL),  # Unweighted total count
+    denominator = survey_total(),                                # Weighted total count
+    mean_value = survey_mean(outcome4_1, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with CI and SE
+  )
+
+
+
+
+####Chart with the AGD variables 
+
+
+navy_palette <- c("#E0E9FE", "#B8C9EE", "#8395B9", "#506489", "#18375F")
+red_palette <- c(unhcr_pal(12, "pal_red"))
+
+
+
+ggplot(outcome4_1_AGD, aes(x = disability, y = mean_value, fill = HH04)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.7) +  # Grouped bar chart
+  geom_text(aes(label = sprintf("%.2f", mean_value)), 
+            position = position_dodge(width = 0.7), vjust = -0.5, size = 3.5) +  # Add values on bars
+  scale_fill_manual(values = c(navy_palette[4], red_palette[2])) +  # Apply custom color palette
+  facet_wrap(~ HH07_cat) +  # Create facets for each age group
+  labs(
+    title = "Outcome 4.1 by Gender, Age, and Disability Status",
+    x = "Disability Status",
+    y = "Mean Value",
+    fill = "Gender",
+    caption = "Note: Only 18 and above"
+  ) +
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +  # Limit the y-axis from 0 to 1
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels for readability
+    axis.text.y = element_text(size = 10)  # Adjust y-axis label size for readability
+  )
+
+
+####Simple bar chart of GBV01
+
+
+
+###define labels 
+
+gbv_services <- c(
+  "GBV01a" = "Health services",
+  "GBV01b" = "Psycho-social services",
+  "GBV01c" = "safety and security services",
+  "GBV01d" = "Legal assistance"
+)
+
+# Calculate the percentage of '1's for each identity document
+
+
+gbv01_percentages <- RMS_SSD_2023_main %>%
+  summarise(across(c(GBV01a, GBV01b, GBV01c, GBV01d),
+                   ~ mean(. == 1, na.rm = TRUE) * 100)) %>%
+  pivot_longer(cols = everything(), 
+               names_to = "Services", 
+               values_to = "Percentage") %>%
+  mutate(Services = gbv_services[Services])  # Map column names to descriptive labels
+
+
+# Create the bar chart
+
+ggplot(gbv01_percentages, aes(x = reorder(Services, Percentage), y = Percentage, fill = Services)) +
+  geom_bar(stat = "identity", width = 0.7) +  # Use "identity" for stat
+  geom_text(aes(label = sprintf("%.1f%%", Percentage)), 
+            position = position_stack(vjust = 0.5), size = 3.5) +  # Add percentage labels inside bars
+  coord_flip() +  # Flip the axes for better readability
+  labs(
+    title = "Knowledge on where to access available GBV services",
+    x = "GBV Services",
+    y = "Percentage",
+    caption = "Note: Percentages are calculated independently for each service for individuals 5 and above."
+  ) +
+  scale_fill_unhcr_d() +  # Apply UNHCR color palette
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.y = element_text(size = 9),  # Adjust y-axis text size for readability
+    legend.position = "none"  # Remove legend for simplicity
+  )
+
+### 4.2 Proportion of PoC who do not accept violence against women. -----
+
+
+#Turn into numeric variables
+main$VAW01a <- labelled_chr2dbl(main$VAW01a)
+main$VAW01b <- labelled_chr2dbl(main$VAW01b)
+main$VAW01c <- labelled_chr2dbl(main$VAW01c)
+main$VAW01d <- labelled_chr2dbl(main$VAW01d)
+main$VAW01e <- labelled_chr2dbl(main$VAW01e)
+
+##This indicator comes from main dataset based on the respondent randomly selected for individual level
+
+#If randomly selected adult who believes that a  husband is justified in beating his wife in various circumstances
+
+##If yes selected for any of the circumstances
+###Prefer not to respond will be put into missing
+main <- main %>%
+  mutate(outcome4_2=case_when(
+    VAW01a==1 | VAW01b==1 |  VAW01c==1 |  VAW01d==1 | VAW01e==1 ~ 0,
+    VAW01a==0 & VAW01b==0 &  VAW01c==0 &  VAW01d==0 & VAW01e==0 ~ 1,
+    TRUE ~ NA_real_)
+  ) %>%
+  mutate(outcome4_2=labelled(outcome4_2,
+                             labels=c(
+                               'Yes'=1,
+                               "No"=0
+                             ),
+                             label="Proportion of people who do not accept violence against women"
+  ))
+
+
+
+
+######Table standard 
+
+
+outcome4_2 <- RMS_SSD_2023_main %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "outcome4_2",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(outcome4_2, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+
+
+##Chart for the indicator above
+
+
+
+ggplot(outcome4_2, aes(x = pop_groups, y = mean_value, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Outcome 4.2",
+    x = "Population Groups",
+    y = "Mean value with standard errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  )
+
+
+#### Table and chart that shows results by age/sex/diversity
+
+outcome4_2_AGD <- RMS_SSD_2023_main %>%
+  filter(!is.na(HH04) & !is.na(disability) & !is.na(HH07_cat) & HH07 > 18) %>%  # only 18 and above 
+  group_by(HH07_cat, HH04, disability) %>%
+  summarise(
+    var_name = "outcome4_2",                                      # Name of the variable
+    num_obs_uw = survey_total(!is.na(outcome4_2), vartype = NULL),  # Unweighted total count
+    denominator = survey_total(),                                # Weighted total count
+    mean_value = survey_mean(outcome4_2, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with CI and SE
+  )
+
+
+
+
+####Chart with the AGD variables 
+
+
+navy_palette <- c("#E0E9FE", "#B8C9EE", "#8395B9", "#506489", "#18375F")
+red_palette <- c(unhcr_pal(12, "pal_red"))
+
+
+
+ggplot(outcome4_2_AGD, aes(x = disability, y = mean_value, fill = HH04)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.7) +  # Grouped bar chart
+  geom_text(aes(label = sprintf("%.2f", mean_value)), 
+            position = position_dodge(width = 0.7), vjust = -0.5, size = 3.5) +  # Add values on bars
+  scale_fill_manual(values = c(navy_palette[4], red_palette[2])) +  # Apply custom color palette
+  facet_wrap(~ HH07_cat) +  # Create facets for each age group
+  labs(
+    title = "Outcome 4.2 by Gender, Age, and Disability Status",
+    x = "Disability Status",
+    y = "Mean Value",
+    fill = "Gender",
+    caption = "Note: Only 18 and above"
+  ) +
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +  # Limit the y-axis from 0 to 1
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels for readability
+    axis.text.y = element_text(size = 10)  # Adjust y-axis label size for readability
+  )
 ## Gender-based Violence
 
-4.1 Proportion of PoC who know where to access available GBV services.
-4.2 Proportion of PoC who do not accept violence against women.
 
+vaw_options <- c(
+  VAW01a = "If she goes out without telling him",
+  VAW01b = "If she neglects the children",
+  VAW01c = "If she argues with him",
+  VAW01d = "If she refuses to have sex with him",
+  VAW01e = "If she burns the food"
+)
+
+# Summarize the percentages for each question
+vaw01_percentages <- main %>%
+  summarise(across(c(VAW01a, VAW01b, VAW01c, VAW01d, VAW01e),
+                   ~ mean(. == 1, na.rm = TRUE) * 100)) %>%
+  pivot_longer(cols = everything(), 
+               names_to = "Question", 
+               values_to = "Percentage") %>%
+  mutate(Question = vaw_options[Question])  # Map column names to descriptive labels
+
+
+
+###Chart
+
+ggplot(vaw01_percentages, aes(x = reorder(Question, Percentage), y = Percentage, fill = Question)) +
+  geom_bar(stat = "identity", width = 0.7) +
+  geom_text(aes(label = sprintf("%.1f%%", Percentage)), 
+            position = position_stack(vjust = 0.5), size = 3.5) +  # Add percentage labels on bars
+  coord_flip() +  # Flip the axes for better readability
+  labs(
+    title = "Justification for Violence Against Women",
+    x = "Justification",
+    y = "Percentage",
+    caption = "Note: Percentages represent the proportion of respondents who agree with the justification."
+  ) +
+  scale_fill_unhcr_d() +  # Apply UNHCR color palette
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.y = element_text(size = 9),  # Adjust text size for readability
+    legend.position = "none"  # Remove the legend for simplicity
+  )
+
+
+### 5.2 Proportion of children who participate in community-based child protection programmes -----
 ## Child Protection
 
-5.2 Proportion of children who participate in community-based child protection programmes.
+
+ind$COMM01 <- labelled_chr2dbl(ind$COMM01)
+ind$COMM02 <- labelled_chr2dbl(ind$COMM02)
+ind$COMM03 <- labelled_chr2dbl(ind$COMM03)
+ind$COMM04 <- labelled_chr2dbl(ind$COMM04)
+
+
+###This indicator comes from the individual level dataset
+
+
+#Children who participate in community-based programmes at least once 
+##under adult supervision in a physically safe area
+
+ind <- ind %>%
+  mutate(outcome5_2=case_when(
+    (COMM01==1 & ( COMM02 >=1 & COMM02!=98) & COMM03==1 & COMM04==1) ~ 1,
+    (COMM01==0 | 
+       (COMM02==0 | COMM02==98) | 
+       (COMM03==0 | COMM03==98) |
+       (COMM04==0 | COMM04==98)) ~ 0, TRUE ~ NA_real_)
+  ) %>%
+  mutate(outcome5_2=labelled(outcome5_2,
+                             labels=c(
+                               'Yes'=1,
+                               "No"=0
+                             ),
+                             label="Proportion of children who participate in community-based child protection programmes"
+  ))
+
+
+
+###Table 
+
+
+outcome5_2 <- RMS_SSD_2023_ind %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "outcome5_2",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(impact3_3, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+
+
+##Table with disability and gender
+
+
+outcome5_2_AGD <- RMS_SSD_2023_ind %>%
+  filter(!is.na(HH04) & !is.na(disability) & !is.na(pop_groups)) %>%  # Missing pipe added here
+  group_by(HH04, pop_groups, disability) %>%
+  summarise(
+    var_name = "outcome5_2",                                      # Name of the variable
+    num_obs_uw = survey_total(!is.na(outcome5_2), vartype = NULL),  # Unweighted total count
+    denominator = survey_total(),                                  # Weighted total count
+    mean_value = survey_mean(outcome5_2, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with CI and SE
+  )
+
+
+
+##Chart with pop groups
+
+gender_colors <- c("Male" = "#8395B9", "Female" = "#E0E9FE")
+
+
+ggplot(outcome5_2_AGD, aes(x = HH04, y = mean_value, fill = HH04)) +  # Fill mapped to HH04 for gender
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.7) +
+  facet_wrap(~ pop_groups) +  # Create separate plots for each population group
+  labs(
+    title = "Outcome 5.2 by Population Groups and Gender",
+    x = "Gender",
+    y = "Proportion of Children that participates community-based protection programmes",
+    caption = "Note: Only children between 5 to 17"
+  ) +
+  scale_fill_manual(values = gender_colors) +  # Apply custom colors for male and female
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for readability
+  )
+
+
+
 
 ## Well-being and Basic Needs
 
@@ -846,4 +1543,11 @@ ggplot(impact3_3_AGD, aes(x = disability, y = mean_value, fill = HH04)) +
 16.2 Proportion of PoC covered by social protection floors/systems.
 
 ####FINAL TABLE
+
+
+
+
+
+
+
 
