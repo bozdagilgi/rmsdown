@@ -357,8 +357,10 @@ impact2_2 <- RMS_SSD_2023_main %>%
     var_name = "impact2_2",                          # name of the variable
     num_obs_uw = unweighted(n()),                    # unweighted total count
     denominator = survey_total(),                      # weighted total count
-    mean_value = survey_mean(impact2_2, vartype = c("ci", "se")),  # indicator value ( weighted) with CI and SE
+    mean_value = survey_mean(impact2_2, vartype = c("ci", "se"), , na.rm = TRUE),  # indicator value ( weighted) with CI and SE
   )
+
+
 
 
 ###Chart of impact 2_2 by pop groups
@@ -877,7 +879,7 @@ outcome1_2 <- RMS_SSD_2023_ind %>%
     var_name = "outcome1_2",                          # Name of the variable
     num_obs_uw = unweighted(n()),                    # Unweighted total count
     denominator = survey_total(),                    # Weighted total count
-    mean_value = survey_mean(impact3_3, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+    mean_value = survey_mean(outcome1_2, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
   )
 
 
@@ -891,7 +893,7 @@ outcome1_2_AGD <- RMS_SSD_2023_ind %>%
     var_name = "outcome1_2",                                      # Name of the variable
     num_obs_uw = survey_total(!is.na(impact3_3), vartype = NULL),  # Unweighted total count
     denominator = survey_total(),                                # Weighted total count
-    mean_value = survey_mean(impact3_3, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with CI and SE
+    mean_value = survey_mean(outcome1_2, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with CI and SE
   )
 
 
@@ -1470,7 +1472,7 @@ outcome5_2 <- RMS_SSD_2023_ind %>%
     var_name = "outcome5_2",                          # Name of the variable
     num_obs_uw = unweighted(n()),                    # Unweighted total count
     denominator = survey_total(),                    # Weighted total count
-    mean_value = survey_mean(impact3_3, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+    mean_value = survey_mean(outcome5_2, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
   )
 
 
@@ -1500,7 +1502,7 @@ ggplot(outcome5_2_AGD, aes(x = HH04, y = mean_value, fill = HH04)) +  # Fill map
   labs(
     title = "Outcome 5.2 by Population Groups and Gender",
     x = "Gender",
-    y = "Proportion of Children that participates community-based protection programmes",
+    y = "Proportion of Children",
     caption = "Note: Only children between 5 to 17"
   ) +
   scale_fill_manual(values = gender_colors) +  # Apply custom colors for male and female
@@ -1510,20 +1512,495 @@ ggplot(outcome5_2_AGD, aes(x = HH04, y = mean_value, fill = HH04)) +  # Fill map
   )
 
 
-
-
 ## Well-being and Basic Needs
 
-8.2 Proportion of PoC with primary reliance on clean (cooking) fuels and technology.
+### 8.2 Proportion of PoC with primary reliance on clean (cooking) fuels and technology ----
+
+
+
+###indicator calculation
+
+main$COOK01 <- labelled_chr2dbl(main$COOK01)
+main$COOK02 <- labelled_chr2dbl(main$COOK02)
+main$COOK03 <- labelled_chr2dbl(main$COOK03)
+
+
+###Based on MICS calculation : TC4.1
+
+main <- main %>%
+  mutate(
+    outcome8_2 = case_when(
+      (COOK01 == 1 & (COOK02 %in% c("1", "2", "3", "4", "5")) | (COOK02 %in% c("10") & COOK03 %in% c("1"))
+      ) ~ 1, 
+      (COOK01 == 1 & (COOK02 %in% c("7", "8", "9", "10", "96")) | ((COOK02 %in% c("10") & !(COOK03 %in% c("1")
+      )))) ~ 0 ,
+      COOK01==0 ~ 0,
+      TRUE ~ NA_real_
+    )
+  ) %>%
+  mutate(
+    outcome8_2 = labelled(outcome8_2,
+                          labels = c(
+                            "No" = 0,
+                            "Yes" = 1
+                          ),
+                          label = "Proportion of people with primary reliance on clean (cooking) fuels and technology"
+    )
+  )
+
+
+table(main$outcome8_2, main$pop_groups)
+
+##Table by population groups
+
+outcome8_2 <- RMS_SSD_2023_main %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Show results disaggregated by pop groups
+  summarise(                                         # put all variables here
+    var_name = "outcome8_2",                          # name of the variable
+    num_obs_uw = unweighted(n()),                    # unweighted total count
+    denominator = survey_total(),                      # weighted total count
+    mean_value = survey_mean(outcome8_2, vartype = c("ci", "se"), na.rm = TRUE) # indicator value ( weighted) with CI and SE
+  )
+
+
+###Chart of impact 2_2 by pop groups
+
+ggplot(outcome8_2, aes(x = pop_groups, y = mean_value, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  # Add labels for mean_value
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Outcome 8.2",
+    x = "Population Groups",
+    y = "Mean Value with Standard Errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  )
+
+
+
+###Show the bar chart for COOK02
+
+table(main$COOK02)
+
+
+# Define stove categories based on the provided list
+stove_labels <- c(
+  "1" = "Solar cooker (thermal energy from the sun)",
+  "2" = "Electric stove",
+  "3" = "Piped natural gas stove",
+  "4" = "Biogas stove",
+  "5" = "Liquefied petroleum gas (LPG)/cooking gas stove",
+  "6" = "Manufactured solid fuel stove",
+  "7" = "Traditional solid fuel stove (non-manufactured)",
+  "8" = "Moveable firepan",
+  "9" = "Three stone stove/open fire",
+  "10" = "Liquid fuel stove",
+  "96" = "Other, specify"
+)
+
+# Summarize the counts and percentages for each category
+cook02_percentages <- main %>%
+  filter(!is.na(COOK02)) %>%  # Exclude missing values
+  count(COOK02) %>%
+  mutate(Percentage = n / sum(n) * 100) %>%
+  mutate(COOK02 = factor(COOK02, levels = names(stove_labels), labels = stove_labels))
+
+# Create the chart
+
+ggplot(cook02_percentages, aes(x = reorder(COOK02, Percentage), y = Percentage, fill = COOK02)) +
+  geom_bar(stat = "identity", width = 0.7) +
+  geom_text(aes(label = sprintf("%.1f%%", Percentage)), 
+            position = position_stack(vjust = 0.5), size = 3.5) +  # Add percentage labels
+  coord_flip() +  # Flip the chart for better readability
+  labs(
+    title = "Distribution of Stove Types (COOK02)",
+    x = "Stove Type",
+    y = "Percentage",
+    caption = "Source: RMS SSD 2023"
+  ) +
+  scale_fill_unhcr_d() +  # Apply UNHCR color palette
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.y = element_text(size = 10),  # Adjust text size for readability
+    legend.position = "none"  # Remove legend for simplicity
+  )
+
 
 ## Sustainable housing and Settlements
 
-9.1 Proportion of PoC living in habitable and affordable housing.
-9.2 Proportion of PoC that have energy to ensure lighting.
+### 9.1 Proportion of PoC living in habitable and affordable housing.----
+
+
+###Indicator calculation
+
+##Module :DWE01 – SHEL01-SHEL06 – DWE05 – DWE08-DWE09
+
+
+##This indicator is calculated from the main dataset
+
+##Condition 1
+
+##Classify as habitable for below conditions - if 98 selected, put into missing
+
+##First check the variables
+
+table(main$SHEL01)
+table(main$SHEL02)
+table(main$SHEL03)
+table(main$SHEL04)
+table(main$SHEL05)
+table(main$SHEL06)
+
+main$SHEL01 <- labelled_chr2dbl(main$SHEL01)
+main$SHEL02 <- labelled_chr2dbl(main$SHEL02)
+main$SHEL03 <- labelled_chr2dbl(main$SHEL03)
+main$SHEL04 <- labelled_chr2dbl(main$SHEL04)
+main$SHEL05 <- labelled_chr2dbl(main$SHEL05)
+main$SHEL06 <- labelled_chr2dbl(main$SHEL06)
+
+
+
+
+main <- main %>%
+  mutate(across(starts_with("SHEL"), ~ifelse(. == 98, NA, .))) %>%
+  mutate(habitablehousing = case_when(
+    (SHEL01 == "1") & (SHEL02 == "1") & (SHEL05 == "1") & 
+      (SHEL03 == "0" ) & (SHEL04 == "0" ) & (SHEL06 == "0" ) ~ 1,
+    (SHEL01 == "0") | (SHEL02 == "0" ) | (SHEL05 == "0") |
+      (SHEL03 == "1") | (SHEL04 == "1") | (SHEL06 == "1" ) ~ 0,
+    TRUE ~ NA_integer_
+  ))
+
+table(main$habitablehousing)
+
+
+##Condition 2
+####Calculate crowding index - overcrowded when more than 3 persons share one room to sleep
+###Overcrowding may cause health issues, thus not considered as physically safe
+
+
+table(main$hh_size_001)
+table(main$DWE05)
+
+
+main <- main %>%
+  mutate(crowding=hh_size_001/DWE05
+  ) %>%
+  mutate(dwe05_cat=case_when( ##if crowding <= 3, not overcrowded 
+    crowding <= 3 ~ 1, TRUE ~ 0)
+  )
+
+
+table(main$crowding)
+table(main$dwe05_cat)
+
+##Condition 3
+
+
+## Add DWE08 and DWE09 to calculations - if household is paying rent, they should be able to afford to pay rent without any financial distress
+
+table(main$DWE08)
+table(main$DWE09)
+
+main$DWE08 <- labelled_chr2dbl(main$DWE08)
+main$DWE09 <- labelled_chr2dbl(main$DWE09)
+
+main <- main %>%
+  mutate(dwe09_cat=case_when( #affordable if HH pays rent and often and always without financial distress
+    (DWE08==1 & (DWE09==1 | DWE09==2)) ~ 1, 
+    (DWE08==1 & (DWE09==3 | DWE09==4)) ~ 0,  
+    DWE08==0 ~ 1) ## if not 0, then not into missing but 1 to be able to calculate the composite indicator
+  )
+
+table(main$dwe09_cat)
+
+###Combine all three conditions for habitable housing
+
+
+main <- main %>%
+  mutate(
+    outcome9_1 = case_when(
+      dwe05_cat == 1 & habitablehousing == 1 & dwe09_cat == 1  ~ 1,
+      TRUE ~ 0
+    ),
+    outcome9_1 = labelled(outcome9_1,
+                          labels = c("Yes" = 1, "No" = 0),
+                          label = "Proportion of people living in habitable and affordable housing")
+  )
+
+
+
+table(main$outcome9_1)
+
+
+####Standard tables 
+
+
+composite_outcome9_1 <- main %>%
+  select(pop_groups, dwe05_cat, habitablehousing, dwe09_cat) %>%
+  pivot_longer(cols = c(dwe05_cat, habitablehousing, dwe09_cat),  # Pivot the three variables
+               names_to = "facility", 
+               values_to = "access") %>%
+  group_by(pop_groups, facility) %>%
+  summarise(percentage = mean(access, na.rm = TRUE) * 100) %>%
+  ungroup()
+
+
+
+###Chart for above with all dimensions 
+
+
+ggplot(composite_outcome9_1, aes(x = facility, y = percentage, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.7) +
+  geom_text(aes(label = sprintf("%.1f%%", percentage)), 
+            position = position_dodge(0.7), vjust = -0.5, size = 3.5) +  # Add percentage labels on bars
+  scale_fill_unhcr_d() +  # Use UNHCR color palette
+  scale_x_discrete(labels = c(
+    "dwe05_cat" = "Not overcrowded",
+    "habitablehousing" = "Habitable Housing",
+    "dwe09_cat" = "Affordable"
+  )) +  # Add descriptive labels to the x-axis
+  labs(
+    title = "Access to Housing Facilities by Population Group",
+    x = "Facility",
+    y = "Percentage Access",
+    fill = "Population Groups"
+  ) +
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),  # Rotate x-axis labels for readability
+    strip.text = element_text(size = 10)  # Adjust label size
+  )
+
+##Table by population groups
+
+outcome9_1 <- RMS_SSD_2023_main %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Show results disaggregated by pop groups
+  summarise(                                         # put all variables here
+    var_name = "outcome9_1",                          # name of the variable
+    num_obs_uw = unweighted(n()),                    # unweighted total count
+    denominator = survey_total(),                      # weighted total count
+    mean_value = survey_mean(outcome8_2, vartype = c("ci", "se"), na.rm = TRUE) # indicator value ( weighted) with CI and SE
+  )
+
+
+
+###Chart of impact 2_2 by pop groups
+
+ggplot(outcome9_1, aes(x = pop_groups, y = mean_value, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  # Add labels for mean_value
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Outcome 9.1",
+    x = "Population Groups",
+    y = "Mean Value with Standard Errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  )
+
+
+
+
+### 9.2 Proportion of PoC that have energy to ensure lighting.----
+
+##Module :LIGHT01-LIGHT03
+
+main$LIGHT01 <- labelled_chr2dbl(main$LIGHT01)
+main$LIGHT02 <- labelled_chr2dbl(main$LIGHT02)
+main$LIGHT03 <- labelled_chr2dbl(main$LIGHT03)
+
+
+###This basic service is calculated from the main dataset
+
+### The below Calculates percentage of PoC having access to clean fuel for lighting and / or basic connectivity (9.1 Outcome Indicator)
+
+main <- main %>% 
+  mutate(outcome9_2=
+           case_when(LIGHT01==1 & (LIGHT02==1 |LIGHT02==2 | LIGHT02==3 | LIGHT02==4 | LIGHT02==5 | 
+                                     LIGHT02==6 |LIGHT02==7) ~ 1, TRUE ~ 0)
+  ) %>%
+  mutate( outcome9_2 = labelled(outcome9_2,
+                                labels = c(
+                                  "Yes" = 1,
+                                  "No" = 0
+                                ),
+                                label = "Proportion of people that have energy to ensure lighting"))
+
+table(main$outcome9_2)
+
+##Table by population groups
+
+outcome9_2 <- RMS_SSD_2023_main %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Show results disaggregated by pop groups
+  summarise(                                         # put all variables here
+    var_name = "outcome9_2",                          # name of the variable
+    num_obs_uw = unweighted(n()),                    # unweighted total count
+    denominator = survey_total(),                      # weighted total count
+    mean_value = survey_mean(outcome9_2, vartype = c("ci", "se"), na.rm = TRUE) # indicator value ( weighted) with CI and SE
+  )
+
+
+###Chart of outcome 9.2 by pop groups
+
+ggplot(outcome9_2, aes(x = pop_groups, y = mean_value, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  # Add labels for mean_value
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Outcome 9.2",
+    x = "Population Groups",
+    y = "Mean Value with Standard Errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  )
+
+
+
+###Show the bar chart for COOK02
+
+table(main$LIGH02)
+
+
+# Define stove categories based on the provided list
+lighting_labels <- c(
+  "1" =	"Electricity",
+  "2" =	"Solar home system",
+  "3"	= "Solar-powered lantern or flashlight",
+  "4" = "Rechargeable flashlight, mobile, torch or lantern",
+  "5" = "Battery powered flashlight, torch or lantern",
+  "6" =	"Biogas lamp",
+  "7" =	"LPG lamp",
+  "8" = "Gasoline lamp",
+  "9"	= "Kerosene or paraffin lamp",
+  "10" = "Oil lamp",
+  "11" = "Candle",
+  "12" ="Open fire",
+  "96" ="Other, specify"
+)
+
+# Summarize the counts and percentages for each category
+light02_percentages <- main %>%
+  filter(!is.na(LIGHT02)) %>%  # Exclude missing values
+  count(LIGHT02) %>%
+  mutate(Percentage = n / sum(n) * 100) %>%
+  mutate(LIGHT02 = factor(LIGHT02, levels = names(lighting_labels), labels = lighting_labels))
+
+# Create the chart
+
+ggplot(light02_percentages, aes(x = reorder(LIGHT02, Percentage), y = Percentage, fill = LIGHT02)) +
+  geom_bar(stat = "identity", width = 0.7) +
+  geom_text(aes(label = sprintf("%.1f%%", Percentage)), 
+            position = position_stack(vjust = 0.5), size = 3.5) +  # Add percentage labels
+  coord_flip() +  # Flip the chart for better readability
+  labs(
+    title = "Distribution of Energy of Lighting (LIGHT02)",
+    x = "Lighting Type",
+    y = "Percentage",
+    caption = "Source: RMS SSD 2023"
+  ) +
+  scale_fill_unhcr_d() +  # Apply UNHCR color palette
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.y = element_text(size = 10),  # Adjust text size for readability
+    legend.position = "none"  # Remove legend for simplicity
+  )
+
 
 ## Healthy Lives
 
-10.1 Proportion of children 9mo-5years who have received measles vaccination.
+#### 10.1 Proportion of children 9mo-5years who have received measles vaccination -----
+
+#Turn into numeric
+ind$MMR03 <- labelled_chr2dbl(ind$MMR03)
+
+
+ind <- ind %>%
+  mutate(outcome10_1=case_when(
+    MMR03==1 ~ 1, MMR03==0  | MMR03==98 ~ 0)
+  ) %>%
+  mutate( outcome10_1 = labelled(outcome10_1,
+                                 labels = c(
+                                   "Yes" = 1,
+                                   "No" = 0
+                                 ),
+                                 label = "Proportion of children aged 9 months to five years who have received measles vaccination*"))
+
+
+###Table 
+
+
+outcome10_1 <- RMS_SSD_2023_ind %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "outcome10_1",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(outcome10_1, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+
+
+##Table with disability and gender
+
+
+outcome1_2_AGD <- RMS_SSD_2023_ind %>%
+  filter(!is.na(HH04) & !is.na(disability) & !is.na(pop_groups) & HH07 < 5 ) %>%  # Exclude HH07_cat categories 1, 2, and 5
+  group_by(HH07_cat, HH04, pop_groups) %>%
+  summarise(
+    var_name = "outcome1_2",                                      # Name of the variable
+    num_obs_uw = survey_total(!is.na(impact3_3), vartype = NULL),  # Unweighted total count
+    denominator = survey_total(),                                # Weighted total count
+    mean_value = survey_mean(impact3_3, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with CI and SE
+  )
+
+
+##Chart with pop groups
+
+gender_colors <- c("Male" = "#8395B9", "Female" = "#E0E9FE")
+
+
+ggplot(outcome1_2_AGD, aes(x = HH04, y = mean_value, fill = HH04)) +  # Fill mapped to HH04 for gender
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.7) +
+  geom_text(aes(label = sprintf("%.2f", mean_value)), 
+            position = position_dodge(width = 0.7), vjust = -0.5, size = 3) +  # Add values on bars
+  facet_wrap(~ pop_groups) +  # Create separate plots for each population group
+  labs(
+    title = "Outcome 1.2 by Population Groups and Gender",
+    x = "Gender",
+    y = "Proportion of Children that registered",
+    caption = "Note: Only children under 5"
+  ) +
+  scale_fill_manual(values = gender_colors) +  # Apply custom colors for male and female
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for readability
+  )
+
+
+
 10.2 Proportion of births attended by skilled health personnel.
 
 ## Clean Water,Sanitation and Hygiene
