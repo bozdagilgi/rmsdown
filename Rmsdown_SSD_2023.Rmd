@@ -155,7 +155,9 @@ if(!require(pacman)) install.packages('pacman')
 pacman::p_load(
   tidyverse, dplyr, tidyr, rlang, purrr, magrittr, expss, srvyr,
   readr,labelled,pastecs,psych,tableone, outbreaks, ggplot2, unhcrthemes,
-  scales, gt,webshot2, sjlabelled, waffle, writexl, remotes, glue, readxl, gt )
+  scales, gt,webshot2, sjlabelled, waffle, writexl, remotes, glue, readxl, gt,
+  knitr,kableExtra)
+
 
 ##Load datasets -- both datasets includes indicators already calculated and cleaned ( step 1 and 2 are complete)
 
@@ -2551,48 +2553,64 @@ combined_RBM_indicators <- bind_rows(
 combined_RBM_indicators_table <- combined_RBM_indicators %>%
   select(pop_groups, var_name, num_obs_uw,denominator, mean_value)
 
-
-```
-
-
-```{r, echo=FALSE, warning=FALSE}
-
-# Create a formatted table using gt, setting table width and font size for PDF
-combined_RBM_indicators_table %>%
-  gt() %>%
-  tab_header(
-    title = "Summary of RBM Indicators by Population Group",
-    subtitle = "Table displays unweighted counts, weighted totals, and indicator values"
-  ) %>%
-  fmt_number(
-    columns = vars(num_obs_uw, denominator),
-    decimals = 0  # Remove decimals for unweighted and weighted totals
-  ) %>%
-  fmt_number(
-    columns = vars(mean_value),
-    decimals = 2  # Round indicator value to 2 decimal places
-  ) %>%
-  cols_label(
-    pop_groups = "Population Group",
-    var_name = "Core Indicator",
-    num_obs_uw = "Unweighted Count",
-    denominator = "Weighted Total",
-    mean_value = "Indicator Value"
-  ) %>%
-  tab_options(
-    table.font.size = px(10),    # Reduce font size to fit on one page
-    table.width = pct(100)       # Set table width to 100% of the page width
-  ) %>%
-  tab_style(
-    style = list(
-      cell_text(weight = "bold")
-    ),
-    locations = cells_column_labels(everything())
-  )
+# Split the combined table by population group
+tables_by_group <- combined_RBM_indicators_table %>%
+  group_by(pop_groups) %>%
+  group_split()
 
 
 ```
 
+
+```{r, echo=FALSE}
+
+
+
+# Function to create a formatted gt table for a specific population group
+create_gt_table <- function(data) {
+  pop_group_name <- unique(data$pop_groups)
+  
+  data %>%
+    select(-pop_groups) %>%  # Remove the pop_groups column, as it's redundant for each separate table
+    gt() %>%
+    tab_header(
+      title = paste("Summary of RBM Indicators for", pop_group_name),
+      subtitle = "Table displays unweighted counts, weighted totals, and indicator values"
+    ) %>%
+    fmt_number(
+      columns = c(num_obs_uw, denominator),  # Use c(...) instead of vars(...)
+      decimals = 0  # No decimals for unweighted and weighted totals
+    ) %>%
+    fmt_number(
+      columns = c(mean_value),  # Use c(...) instead of vars(...)
+      decimals = 2  # Round indicator value to 2 decimal places
+    ) %>%
+    cols_label(
+      var_name = "Core Indicator",
+      num_obs_uw = "Unweighted Count",
+      denominator = "Weighted Total",
+      mean_value = "Indicator Value"
+    ) %>%
+    tab_options(
+      table.font.size = px(10),    # Adjust font size for better fit
+      table.width = pct(100)       # Set table width to 100% of the page width
+    ) %>%
+    tab_style(
+      style = list(
+        cell_text(weight = "bold")
+      ),
+      locations = cells_column_labels(everything())
+    )
+}
+
+# Render each table for different population groups
+for (table_data in tables_by_group) {
+  create_gt_table(table_data) %>%
+    print()  # Ensure each table gets rendered in the report
+}
+
+
+```
 
 ## Acknowledgements
 
