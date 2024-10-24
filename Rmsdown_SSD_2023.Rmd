@@ -1,10 +1,10 @@
 ---
 title: "RMS South Sudan 2023"
-author: "Global Data Service - Statistics and Demographics Section"
+author: "Global Data Service - Statistics, Data Science and Surveys Section"
 date: "2024-10-10"
-output: rmsdown::paged_report
+output: 
+  rmsdown::paged_report:
 ---
-
 
 # Executive Summary
 
@@ -2558,63 +2558,57 @@ tables_by_group <- combined_RBM_indicators_table %>%
   group_by(pop_groups) %>%
   group_split()
 
+combined_RBM_indicators_table <- combined_RBM_indicators %>%
+  select(pop_groups, var_name, num_obs_uw, denominator, mean_value) %>%
+  rename(
+    `Core Indicator` = var_name,
+    `Unweighted Count` = num_obs_uw,
+    `Weighted Total` = denominator,
+    `Indicator Value` = mean_value
+  )
+
+
+# Split the table into two based on population groups
+table_pop_group_1 <- combined_RBM_indicators_table %>%
+  filter(pop_groups == "Refugee returnees")
+
+table_pop_group_2 <- combined_RBM_indicators_table %>%
+  filter(pop_groups == "IDPs")
+
+
 
 ```
+
+```{r, echo=FALSE}
+# Table for Population Group 1
+table_pop_group_1 %>%
+  kable(caption = "RMS South Sudan 2023 - Indicators for Population Group 1") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+                full_width = FALSE, 
+                position = "center", 
+                font_size = 10)
+```
+
 
 
 ```{r, echo=FALSE}
 
-
-
-# Function to create a formatted gt table for a specific population group
-create_gt_table <- function(data) {
-  pop_group_name <- unique(data$pop_groups)
-  
-  data %>%
-    select(-pop_groups) %>%  # Remove the pop_groups column, as it's redundant for each separate table
-    gt() %>%
-    tab_header(
-      title = paste("Summary of RBM Indicators for", pop_group_name),
-      subtitle = "Table displays unweighted counts, weighted totals, and indicator values"
-    ) %>%
-    fmt_number(
-      columns = c(num_obs_uw, denominator),  # Use c(...) instead of vars(...)
-      decimals = 0  # No decimals for unweighted and weighted totals
-    ) %>%
-    fmt_number(
-      columns = c(mean_value),  # Use c(...) instead of vars(...)
-      decimals = 2  # Round indicator value to 2 decimal places
-    ) %>%
-    cols_label(
-      var_name = "Core Indicator",
-      num_obs_uw = "Unweighted Count",
-      denominator = "Weighted Total",
-      mean_value = "Indicator Value"
-    ) %>%
-    tab_options(
-      table.font.size = px(10),    # Adjust font size for better fit
-      table.width = pct(100)       # Set table width to 100% of the page width
-    ) %>%
-    tab_style(
-      style = list(
-        cell_text(weight = "bold")
-      ),
-      locations = cells_column_labels(everything())
-    )
-}
-
-# Render each table for different population groups
-for (table_data in tables_by_group) {
-  create_gt_table(table_data) %>%
-    print()  # Ensure each table gets rendered in the report
-}
-
+# Table for Population Group 1
+table_pop_group_2 %>%
+  kable(caption = "RMS South Sudan 2023 - Indicators for Population Group 2") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+                full_width = FALSE, 
+                position = "center", 
+                font_size = 10)
 
 ```
 
+
+
+
 ## Acknowledgements
 
-*Acknowledgement of all organizations participating in the needs assessment, including agencies, NGOs, government entities, and academic institutions*
+*Acknowledgement of all organizations participating in the Results Monitoring Surveys, including agencies, NGOs, government entities, and academic institutions*
 
 **Firstname Lastname**, Title of person and country,
 
