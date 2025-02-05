@@ -1,0 +1,3007 @@
+---
+title: "Results Monitoring Surveys 2024 Uganda"
+subtitle: "The Results from Host Communities and Refugees and Asylum Seekers"
+date: "`r format(Sys.Date(),  '%B %Y')`"
+output: 
+  rmsdown::paged_report:
+    front_img: "cover-example.jpg"
+    img_to_dark: false
+    self_contained: true
+toc-title: Contents
+lot: false
+# Set lot title, default: "List of Tables"
+lot-title: "Tables"
+lof: true
+# Set lof title, default: "List of Figures"
+lof-title: "Figures"
+# Set lof title, default: "List of Abbreviations"
+#loa-title: "Acronyms"
+paged-footnotes: false
+links-to-footnotes: true
+# uncomment this line to produce HTML and PDF in RStudio:
+#knit: pagedown::chrome_print
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  collapse = TRUE,
+  comment = "#>",
+  dev = "svglite",
+  fig.width = 6.8,
+  fig.asp = .618,
+  fig.align = "center",
+  out.width = "100%"
+)
+```
+
+```{r package, include=FALSE}
+
+# Install pacman if not already installed
+if(!require(pacman)) install.packages('pacman')
+
+# Load all required libraries using pacman
+pacman::p_load(
+  tidyverse, dplyr, tidyr, rlang, purrr, magrittr, expss, srvyr,
+  readr,labelled,pastecs,psych,tableone, outbreaks, ggplot2, unhcrthemes,
+  scales, gt,webshot2, sjlabelled, waffle, writexl, remotes, glue, readxl, gt,
+  knitr,kableExtra)
+```
+
+```{r dataset, include=FALSE}
+
+main <- readRDS("C:/Users/BOZDAG/OneDrive - UNHCR/Desktop/UNHCR/R projets/Uganda RMS 2024/Uganda-RMS-2024/main.rds")
+ind <- readRDS("C:/Users/BOZDAG/OneDrive - UNHCR/Desktop/UNHCR/R projets/Uganda RMS 2024/Uganda-RMS-2024/ind.rds")
+```
+
+```{r, include=FALSE}
+
+
+### Creating the survey design object -- for individual and HH level datasets 
+
+##Main dataset
+
+RMS_UGA_2024_main <- main %>%
+  as_survey_design(
+    ids = NULL,          # Numeric or factor cluster IDs
+    strata = samp_strat,       # Strata as character or factor
+    weights = wgh_samp_pop_restr, # Numeric survey weights
+    nest = TRUE                # Use TRUE if PSUs are nested within strata
+  )
+
+RMS_UGA_2024_main_strata <- main %>%
+  as_survey_design(
+    ids = NULL,          # Numeric or factor cluster IDs
+    strata = samp_strat,       # Strata as character or factor
+    weights = wgh_strata_spec, # Numeric survey weights
+    nest = TRUE                # Use TRUE if PSUs are nested within strata
+  )
+
+##Ind dataset
+
+RMS_UGA_2024_ind <- ind %>%
+  as_survey_design(
+    ids = NULL,          # Numeric or factor cluster IDs
+    strata = samp_strat,       # Strata as character or factor
+    weights = wgh_samp_pop_restr, # Numeric survey weights
+    nest = TRUE                # Use TRUE if PSUs are nested within strata
+  )
+
+RMS_UGA_2024_ind_strata <- ind %>%
+  as_survey_design(
+    ids = NULL,          # Numeric or factor cluster IDs
+    strata = samp_strat,       # Strata as character or factor
+    weights = wgh_strata_spec, # Numeric survey weights
+    nest = TRUE                # Use TRUE if PSUs are nested within strata
+  )
+
+
+
+##Randomly selected adult dataset
+
+
+RMS_UGA_2024_main_strata_resp <- main %>%
+  as_survey_design(
+    ids = NULL, 
+    strata = samp_strat, # Specify the column with cluster IDs
+    weights = wgh_strata_spec_resp, # Specify the column with survey weights
+    nest = TRUE              # Use TRUE if PSUs are nested within clusters (optional, based on your survey design)
+  )
+
+
+
+RMS_UGA_2024_main_resp <- main %>%
+  as_survey_design(
+    ids = NULL, 
+    strata = samp_strat, # Specify the column with cluster IDs
+    weights = wgh_samp_pop_restr_resp, # Specify the column with survey weights
+    nest = TRUE              # Use TRUE if PSUs are nested within clusters (optional, based on your survey design)
+  )
+
+
+
+
+```
+
+# Executive Summary
+
+A short summary for readers to become acquainted with the key messages without having to read the entire report.
+It should include the assessment objectives, methods used, key findings, conclusions, and recommendations.
+Use bullet points and refer to relevant chapters so readers can find more detail if required.
+
+### Key Findings
+
+-   item 1
+-   item 2
+-   item 3
+
+### Recommandations
+
+-   Secure adequate financial resources to meet the needs.
+-   Encourage the national authorities to assume a leading role in the humanitarian response.
+-   Scale up the services provided.
+-   Prioritize key activities to ensure proper protection of the most vulnerable individuals.
+-   Focus on the lowest performance and categorize critical gaps.
+-   item
+-   item
+
+# Acknowledgements
+
+*Acknowledgement of all organizations participating in the needs assessment, including agencies, NGOs, government entities, and academic institutions*
+
+**Firstname Lastname**, Title of person and country,
+
+[name\@email.org](mailto:name@email.org){.email}
+
+**Firstname Lastname**, Title of person and country,
+
+[name\@email.org](mailto:name@email.org){.email}
+
+###### [1.]{.big-num} Introduction {.section-title}
+
+# Introduction {.hide-h1}
+
+## Results Monitoring Surveys
+
+::: {.lead .mb-5}
+Overall and specific objectives and focus of the Results Monitoring Surveys, including the coverage (populations, sectors, and geographic areas) and the types of decisions need to be informed.
+:::
+
+UNHCR’s Results Monitoring Surveys (RMS) facilitate and harmonise monitoring of household survey-based impact and outcome level indicators from the Global Results Framework.
+The RMS support COMPASS, UNHCR’s results-based management approach, and are an important contribution to the Data Transformation Strategy.
+While the RMS do not directly monitor progress of UNHCR and funded partners’ interventions, they provide insights on how the lives of forcibly displaced and stateless people are changing.
+
+[add short overview of operational and demographic country context]
+
+###### [2.]{.big-num} Methods {.section-title}
+
+# Methods {.hide-h1}
+
+## Data Collection
+
+Furthermore, provide some information about the data collection methods and an analysis plan annex that operationalizes the analytical framework and details questions, data collections methods and sources for each information element sought, as well as how the information have been analysed.
+
+This field work report presents the process of implementing the 2023 Results Monitoring Survey (RMS) conducted by UNHCR South Sudan, with support from the Regional Bureau of the East, Horn and Great Lakes of Africa and guidance from UN Headquarters.
+The RMS serves as a tool to measure the progress of country operations using impact and outcome indicators.
+
+The survey was conducted using the computer-assisted personal interviews (CAPI) method at the County level across 9 states of South Sudan, including 41 Counties.
+UNHCR, with the support of its partners, reached 6,266 households through a simple random sampling method and, in some cases, based on a set list provided by the local authorities (RRC).
+The survey delves into key areas: mobility, disability, housing, basic needs, safety, income, and gender-based violence, providing insights into life for Internally Displaced Persons (IDPs).
+
+## Sampling strategy
+
+Type of sampling design and rationale for this design.
+Sample size and locations.
+Deviation from the original sampling strategy, including non-response rate and replacement method.
+More detailed information such as the sample plan can be annexed.
+
+**Map of the country (Uganda) that demonstrates data collection locations**
+
+The target population groups, covered within RMS 2024, are the Refugees and Asylum Seekers and Host Community.
+
+## Enumerator and training
+
+Explain the profile of the enumerators/survey firm and how enumerators were trained.
+
+Following RMS 2022, UNHCR incorporated the RMS 2023 within the partnership agreements with different partners operating across South Sudan to ensure their re-engagement and continuity to carry out this activity.
+Since most of the field enumerators were familiar with the RMS methodology.
+This allowed to further strengthen their capacity and manifest a strong command during the data collection phase.
+
+The MFT (Multi-functional Team) members approached the focal person of each relevant partner to confirm their preparedness to launch this exercise.
+Both sides discussed the needs in terms of workforce, budgeting, provision of trainings, provision of materials and reached to an agreement on the overall workplan and timeline.
+
+In coordination with the UNHCR field offices, MFT members organized and successfully delivered 6 training sessions in 5 locations: Juba, Yei, Wau, Yambio and Bentiu in which an extensive practical use of the devices, a simulation of the data collection exercise and data protection policies were offered.
+Subsequently, UNHCR managed to adequately train a total number of 93 enumerators.
+
+## Workplan
+
+Timeline of different phases of the assessment, including training, pilot phase, primary data collection (if any) and analysis.
+
+The field work covered 9 states of South Sudan.
+The data collection took place from 03 December 2023 to 07 February 2024 in 41 counties.
+
+## Limitations
+
+Any known limitations of the survey approach and findings, including sources of potential bias or error.
+
+The complex context of South Sudan does not provide the right conditions for the implementation of humanitarian activities in a safe and uninterrupted manner.
+In this year’s exercise, many factors impeded the data collection at different levels:\
+
+-   *Insecurity*: Due to insecurity in Western Bahr el Ghazal, namely, Wau-Kuajok road, the activity was suspended until the movement restrictions were lifted.
+
+-   *Mobility*: Due to the flooding, the road to Adok port was impassable with limited means of transportation.
+    The enumerators had to take motorbikes services at a significant higher cost.
+
+-   *Internet reliability*: In some remote areas, internet connectivity was entirely absent or highly poor.
+    Under this condition, the field enumerators were collecting data, in these locations, off-line.
+    As the uploading took place at a later stage, The data quality check could not be done in real-time.
+
+-   *Questionnaire length*: The bigger the family size is, the longer the interview lasts.
+    Some respondents
+
+-   *Assumptions*: Some respondents expected to be paid after the personal interview.
+
+-   *Technical issues*: Some tablets were unable to connect to Internet and had to be switched off and on several times
+
+###### [3.]{.big-num} Findings {.section-title}
+
+# Findings {.hide-h1}
+
+## Demographic characteristics of the survey population
+
+```{r numbers, include=FALSE}
+
+##Calculate some numbers to insert inside the text
+total_households <- nrow(main)
+total_individuals <- nrow(ind)
+
+ras_households <- main %>%
+  filter(pop_groups == "Refugees and Asylum-seekers") %>%
+  nrow() 
+
+host_households <- main %>%
+  filter(pop_groups == "Host communities") %>%
+  nrow()
+
+ind_female <- ind %>%
+  filter(HH04 == "Female") %>%
+  nrow()
+
+
+ind_male <- ind %>%
+  filter(HH04 == "Male") %>%
+  nrow()
+
+ind_age_below18 <- ind %>%
+  filter(HH07_cat2 =="0-17") %>%
+  nrow()
+
+ind_age_above18 <- ind %>%
+  filter(HH07_cat2 =="18-60+") %>%
+  nrow()
+```
+
+The total sample consisted of `r total_households` households.Of these households, `r host_households` were host communities and `r ras_households` were the refugees and asylum seekers.
+A total of `r total_individuals` individuals were interviewed, with more than half `r ind_female` being female and `r ind_male` being male.
+Among the interviewed individuals `r ind_age_above18` were 18 years or above.
+Children comprised a large age group at `r ind_age_below18`.
+
+## Indicator-specific findings:
+
+### Impact area 2: Realizing Rights in Safe Environments
+
+#### Core impact 2.2 Proportion of people residing in physically safe and secure settlements with access to basic facilities
+
+People with access to basic facilities are defined as those who have access to all four basic services considered for this indicator: shelter, drinking water, energy and health. Concretely, 1) they live in habitable housing, which is not overcrowded, provides protection from natural elements and other threats, 2) they can reach a primary healthcare facility within one hour from their housing, 3) have electricity for lighting, and 4) use improved sources of drinking water in their housing or within 30 minutes round trip collection time. In addition, 5) they live in safe and secure neighbourhoods, proxied through absence of flooding and landmine risks and hazards.
+
+As all five conditions need to be met, values for this indicator can be very low and a detailed analysis of indicator components is required.
+
+*For more information, see [indicator guidance](https://intranet.unhcr.org/content/dam/unhcr/intranet/protection-operations/prog-hub/program-cycle/indictors/core/impact/Core%20impact%202.2%20Proportion%20of%20people%20residing%20in%20physically%20safe%20and%20secure%20settlements%20with%20access%20to%20basic%20facilities.pdf).*
+
+
+```{r, include=FALSE}
+####Standard tables 
+
+
+composite_impact2_2_pop <- main %>%
+  select(pop_groups, shelter, electricity, drinkingwater, secure, healthcare, impact2_2, wgh_samp_pop_restr) %>%
+  pivot_longer(cols = shelter:healthcare, names_to = "facility", values_to = "access") %>%
+  mutate(facility = case_when(
+    facility == "shelter" ~ "Habitable Shelter",
+    facility == "electricity" ~ "Access to Electricity",
+    facility == "drinkingwater" ~ "Access to Drinking Water",
+    facility == "secure" ~ "Feeling of Security",
+    facility == "healthcare" ~ "Access to Healthcare",
+    TRUE ~ facility  # Keep any other values unchanged
+  )) %>%
+  group_by(pop_groups, facility) %>%
+  summarise(percentage = weighted.mean(access, w =wgh_samp_pop_restr, na.rm = TRUE) * 100) %>%
+  ungroup()
+```
+
+
+```{r fig1, echo=FALSE, fig.cap = "Access to Facilities by Population Groups",results='hide',fig.keep='all', warning=FALSE, message=F}
+###Chart for above with all dimensions 
+
+composite_impact2_2_pop %>%
+  ggplot(aes(x = facility, y = percentage, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_text(
+    aes(label = paste0(round(percentage, 1), "%")),
+    position = position_dodge(width = 0.9),
+    vjust = -0.25,
+    size = 3.5
+  ) +
+  scale_fill_unhcr_d() +
+  scale_y_continuous(limits = c(0, 100), expand = c(0, 0)) +
+  labs(
+    title = "Access to Facilities by Population Group",
+    x = "Facility",
+    y = "Percentage Access (%)",
+    fill = "Population Groups"
+  ) +
+  theme_unhcr() +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 20))  # Wrap labels at 20 characters
+```
+
+
+```{r, include=FALSE}
+###Table with strata
+
+
+composite_impact2_2_strata <- main %>%
+  select(samp_strat, shelter, electricity, drinkingwater, secure, healthcare, impact2_2, wgh_strata_spec) %>%
+  pivot_longer(cols = shelter:healthcare, names_to = "facility", values_to = "access") %>%
+  mutate(facility = case_when(
+    facility == "shelter" ~ "Habitable Shelter",
+    facility == "electricity" ~ "Access to Electricity",
+    facility == "drinkingwater" ~ "Access to Drinking Water",
+    facility == "secure" ~ "Feeling of Security",
+    facility == "healthcare" ~ "Access to Healthcare",
+    TRUE ~ facility  # Keep any other values unchanged
+  )) %>%
+  group_by(samp_strat, facility) %>%
+  summarise(percentage = weighted.mean(access, w = wgh_strata_spec, na.rm = TRUE) * 100) %>%
+  ungroup()
+```
+
+
+```{r fig2, echo=FALSE, fig.cap = "Access to Facilities by Strata",results='hide',fig.keep='all', warning=FALSE, message=F}
+###Chart for above with all dimensions 
+
+
+composite_impact2_2_strata %>%
+  ggplot(aes(x = facility, y = percentage, fill = samp_strat)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_text(
+    aes(label = paste0(round(percentage, 0), "%")),
+    position = position_dodge(width = 0.9),
+    vjust = -0.25,
+    size = 3.5
+  ) +
+  scale_fill_unhcr_d() +
+  scale_y_continuous(limits = c(0, 100), expand = c(0, 0)) +
+  labs(
+    title = "Access to Facilities by Strata",
+    x = "Facility",
+    y = "Percentage Access (%)",
+    fill = "Population Groups"
+  ) +
+  theme_unhcr() +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 20))  # Wrap labels at 20 characters
+```
+
+
+```{r , include=FALSE}
+##Table by population groups
+
+impact2_2 <- RMS_UGA_2024_main %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Show results disaggregated by pop groups
+  summarise(                                         # put all variables here
+    var_name = "impact2_2",                          # name of the variable
+    num_obs_uw = unweighted(n()),                    # unweighted total count
+    denominator = survey_total(),                      # weighted total count
+    mean_value = survey_mean(impact2_2, vartype = c("ci", "se"), , na.rm = TRUE),  # indicator value ( weighted) with CI and SE
+  )
+
+
+
+
+impact2_2_strata <- RMS_UGA_2024_main %>%
+  filter(!is.na(samp_strat)) %>%                     # Exclude if pop groups is NA
+  group_by(samp_strat) %>%                           # Show results disaggregated by pop groups
+  summarise(                                         # put all variables here
+    var_name = "impact2_2",                          # name of the variable
+    num_obs_uw = unweighted(n()),                    # unweighted total count
+    denominator = survey_total(),                      # weighted total count
+    mean_value = survey_mean(impact2_2, vartype = c("ci", "se"), , na.rm = TRUE),  # indicator value ( weighted) with CI and SE
+  )
+```
+
+
+```{r fig3, echo=FALSE, fig.cap = "Results of RBM Core Impact 2.2 by Population Groups",results='hide',fig.keep='all', warning=FALSE, message=F}
+###Chart of impact 2_2 by pop groups
+
+ggplot(impact2_2, aes(x = pop_groups, y = mean_value, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  # Add labels for mean_value
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Impact 2.2",
+    x = "Population Groups",
+    y = "Mean Value with Standard Errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  )
+```
+
+
+```{r fig4, echo=FALSE, fig.cap = "Results of RBM Core Impact 2.2 by Strata",results='hide',fig.keep='all', warning=FALSE, message=F}
+### with strata
+
+
+###Chart of impact 2_2 by pop groups
+
+ggplot(impact2_2_strata, aes(x = samp_strat, y = mean_value, fill = samp_strat)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  # Add labels for mean_value
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Impact 2.2 by Strata",
+    x = "Population Groups",
+    y = "Mean Value with Standard Errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  ) 
+
+```
+
+
+
+#### Core impact 2.3 Proportion of people with access to health services
+
+People with access to essential primary health care services are defined as those who needed to see health professionals in the past three months and received the required medical attention. Reasons for not being able to access medical care are recorded. Individuals who chose not to seek services are excluded from the calculation.
+
+*For more information, see [indicator guidance](https://intranet.unhcr.org/content/dam/unhcr/intranet/protection-operations/prog-hub/program-cycle/indictors/core/impact/Core%20impact%202.3%20Proportion%20of%20people%20with%20access%20to%20health%20services.pdf).*
+
+
+```{r, include=FALSE}
+###Table by population groups
+
+impact2_3 <- RMS_UGA_2024_ind %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "impact2_3",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(impact2_3, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+```
+
+
+```{r fig5, echo=FALSE, fig.cap = "Results of RBM Core Impact 2.3 by Population Groups",results='hide',fig.keep='all', warning=FALSE, message=F}
+##Chart for the indicator above
+
+
+ggplot(impact2_3, aes(x = pop_groups, y = mean_value, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  
+  scale_y_continuous(limits = c(0, 1.1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Impact 2.3",
+    x = "Population Groups",
+    y = "Mean Value with standard errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  )
+```
+
+
+```{r, include=FALSE}
+##Table with strata
+
+###Table by population groups
+
+impact2_3_strata <- RMS_UGA_2024_ind_strata %>%
+  filter(!is.na(samp_strat)) %>%                     # Exclude if pop groups is NA
+  group_by(samp_strat) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "impact2_3",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(impact2_3, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+```
+
+
+```{r fig6, echo=FALSE, fig.cap = "Results of RBM Core Impact 2.3 by Strata",results='hide',fig.keep='all', warning=FALSE, message=F}
+##Chart for the indicator above
+
+
+
+ggplot(impact2_3_strata, aes(x = samp_strat, y = mean_value, fill = samp_strat)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  
+  scale_y_continuous(limits = c(0, 1.1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Impact 2.3 by Strata",
+    x = "Population Groups",
+    y = "Mean Value with standard errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  )
+```
+
+
+```{r, include=FALSE}
+#### Table and chart that shows results by age/sex/diversity
+
+
+
+impact2_3_AGD <- RMS_UGA_2024_ind %>%
+  filter(!HH04 %in% c("3", "99") & !is.na(disability) & !is.na(HH07_cat)) %>%                     # Exclude if HH07_cat is NA
+  group_by(pop_groups, HH07_cat, HH04, disability) %>%            # Group by Age, Gender, and Disability
+  summarise(                                       # Summarise to compute values
+    var_name = "impact2_3",                        # Name of the variable
+    num_obs_uw = unweighted(n()),                  # Unweighted total count
+    denominator = survey_total(),                  # Weighted total count
+    mean_value = survey_mean(impact2_3, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+```
+
+
+```{r fig7, echo=FALSE, fig.cap = "Results of RBM Core Impact 2.3 by AGD",results='hide',fig.keep='all', warning=FALSE, message=F}
+####Chart with the AGD variables 
+
+ggplot(impact2_3_AGD, aes(x = pop_groups, y = mean_value, fill = disability)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  scale_fill_unhcr_d() +  # UNHCR color palette
+  facet_wrap(~ HH07_cat) +  # Create facets for each age group
+  labs(
+    title = "Impact 2.3 by Gender, Age and Disability Status",
+    x = "Population Groups",
+    y = "Mean Value",
+    fill = "Disability",
+    caption = "Note: The disability module does not include children under 5."  #
+  ) +
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for readability
+  ) +
+  scale_y_continuous(limits = c(0, 1.1), expand = c(0, 0))
+```
+
+
+```{r, include=FALSE}
+#### The reasons for not being able to access to health services 
+
+##add labels for not accessing the health services
+
+reasons_mapping <- c(
+  "HACC04_1" = "Health facility too far",
+  "HACC04_2" = "Medicine or health facility too expensive",
+  "HACC04_3" = "No treatment exists/Not necessary",
+  "HACC04_4" = "Don't know where to go",
+  "HACC04_5" = "No time",
+  "HACC04_6" = "Prefer other options",
+  "HACC04_7" = "Health facility does not accept new patients",
+  "HACC04_8" = "Don't trust modern medicine",
+  "HACC04_9" = "Don't trust doctors",
+  "HACC04_10" = "Administrative/documentation issues (certificates, service cards, etc.)",
+  "HACC04_11" = "Long waiting times",
+  "HACC04_12" = "Lack of medical supplies",
+  "HACC04_13" = "Health facility damaged/destroyed"
+)
+
+##weighted reasons
+
+hacc_percentages <- ind %>%
+  group_by(pop_groups) %>%  # Group by population groups
+  summarise(
+    HACC04_1 = weighted.mean(HACC04_1 == 1, w = wgh_samp_pop_restr, na.rm = TRUE) * 100,
+    HACC04_2 = weighted.mean(HACC04_2 == 1, w = wgh_samp_pop_restr, na.rm = TRUE) * 100,
+    HACC04_3 = weighted.mean(HACC04_3 == 1, w = wgh_samp_pop_restr, na.rm = TRUE) * 100,
+    HACC04_4 = weighted.mean(HACC04_4 == 1, w = wgh_samp_pop_restr, na.rm = TRUE) * 100,
+    HACC04_5 = weighted.mean(HACC04_5 == 1, w = wgh_samp_pop_restr, na.rm = TRUE) * 100,
+    HACC04_6 = weighted.mean(HACC04_6 == 1, w = wgh_samp_pop_restr, na.rm = TRUE) * 100,
+    HACC04_7 = weighted.mean(HACC04_7 == 1, w = wgh_samp_pop_restr, na.rm = TRUE) * 100,
+    HACC04_8 = weighted.mean(HACC04_8 == 1, w = wgh_samp_pop_restr, na.rm = TRUE) * 100,
+    HACC04_9 = weighted.mean(HACC04_9 == 1, w = wgh_samp_pop_restr, na.rm = TRUE) * 100,
+    HACC04_10 = weighted.mean(HACC04_10 == 1, w = wgh_samp_pop_restr, na.rm = TRUE) * 100,
+    HACC04_11 = weighted.mean(HACC04_11 == 1, w = wgh_samp_pop_restr, na.rm = TRUE) * 100,
+    HACC04_12 = weighted.mean(HACC04_12 == 1, w = wgh_samp_pop_restr, na.rm = TRUE) * 100,
+    HACC04_13 = weighted.mean(HACC04_13 == 1, w = wgh_samp_pop_restr, na.rm = TRUE) * 100
+  ) %>%
+  pivot_longer(cols = starts_with("HACC04"), 
+               names_to = "Reason", 
+               values_to = "Percentage") %>%
+  mutate(Reason = reasons_mapping[Reason])  # Map column names to descriptive labels
+```
+
+
+```{r fig8, echo=FALSE, fig.cap = "Reasons for Not Accessing Health Services by Population Groups",results='hide',fig.keep='all', warning=FALSE, message=F}
+##Chart creation
+
+
+ggplot(hacc_percentages, aes(x = reorder(Reason, Percentage), y = Percentage, fill = pop_groups)) +
+  geom_bar(stat = "identity", width = 0.7) +
+  geom_text(aes(label = sprintf("%.0f%%", Percentage, 0)), 
+            position = position_stack(vjust = 0.5), size = 3) +  # Add percentage labels on bars
+  coord_flip() +  # Flip the axes for better readability
+  labs(
+    title = "Reasons for Not Accessing Health Services by Population Groups",
+    x = "Reason",
+    y = "Weighted Percentage",
+    caption = "Note: Percentages calculated independently for each reason and weighted by population groups."
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.y = element_text(size = 9),  # Adjust text size for readability
+    legend.position = "none"  # Remove the legend for simplicity
+  ) +
+  facet_wrap(~ pop_groups)  # Facet by pop_groups
+
+
+```
+
+
+### Impact area 3: Empowering Communities and Achieving Gender Equality
+
+#### Core impact 3.2a Proportion of children and young people enrolled in primary education
+
+This indicator measures the primary education gross enrolment rate. It considers all children and young people, regardless of their age, who are officially registered in primary education programmes in any type of primary school and education institution, expressed as a percentage of the official total primary-school aged population.
+
+*Note that this indicator is typically sourced from school/Ministry of Education administrative data. Where such data is not available, survey results have to be considered, reviewed and recorded as proxy data as the survey focuses on attendance at any time during the current school year, instead of official registration.*
+
+*For more information, see [indicator guidance](https://intranet.unhcr.org/content/dam/unhcr/intranet/protection-operations/prog-hub/program-cycle/indictors/core/impact/Core%20impact%203.2a%20Proportion%20of%20children%20and%20young%20people%20enrolled%20in%20primary%20education.pdf).*
+
+```{r, include=FALSE}
+#Table 
+
+table(ind$HH07)
+table(ind$age_primary)
+
+impact3_2a <- RMS_UGA_2024_ind %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop_groups is NA
+  group_by(pop_groups) %>%                          # Group by pop_groups
+  summarise(
+    var_name = "impact3_2a",                        # Name of the variable
+    num_obs_uw = survey_total(!is.na(age_primary), na.rm = TRUE),  # Unweighted total count
+    denominator = survey_total(age_primary, na.rm = TRUE),         # Weighted total count
+    edu_primary_total = survey_total(edu_primary, na.rm = TRUE),   # Total for edu_primary
+    age_primary_total = survey_total(age_primary, na.rm = TRUE)    # Total for age_primary
+  ) %>%
+  mutate(
+    mean_value = round(edu_primary_total / age_primary_total, 4)  # Calculate the mean value
+  )
+
+
+##Table with strata
+
+impact3_2a_strata <- RMS_UGA_2024_ind_strata %>%
+  filter(!is.na(samp_strat)) %>%                     # Exclude if pop_groups is NA
+  group_by(samp_strat) %>%                          # Group by pop_groups
+  summarise(
+    var_name = "impact3_2a",                        # Name of the variable
+    num_obs_uw = survey_total(!is.na(age_primary), na.rm = TRUE),  # Unweighted total count
+    denominator = survey_total(age_primary, na.rm = TRUE),         # Weighted total count
+    edu_primary_total = survey_total(edu_primary, na.rm = TRUE),   # Total for edu_primary
+    age_primary_total = survey_total(age_primary, na.rm = TRUE)    # Total for age_primary
+  ) %>%
+  mutate(
+    mean_value = round(edu_primary_total / age_primary_total, 4)  # Calculate the mean value
+  )
+###Table with gender and disability included for the chart
+
+table(ind$HH04)
+
+impact3_2a_AGD <- RMS_UGA_2024_ind %>%
+  filter(!is.na(HH04)) %>%  # Exclude 3 and 99, and ensure HH04 is not NA
+  group_by(pop_groups, HH04) %>%                          # Group by pop_groups
+  summarise(
+    var_name = "impact3_2a",                        # Name of the variable
+    num_obs_uw = survey_total(!is.na(age_primary), na.rm = TRUE),  # Unweighted total count
+    denominator = survey_total(edu_primary, na.rm = TRUE),         # Weighted total count
+    edu_primary_total = survey_total(edu_primary, na.rm = TRUE),   # Total for edu_primary
+    age_primary_total = survey_total(age_primary, na.rm = TRUE)    # Total for age_primary
+  ) %>%
+  mutate(
+    mean_value = round(edu_primary_total / age_primary_total, 4)  # Calculate the mean value
+  )
+```
+
+
+```{r fig9, echo=FALSE, fig.cap = "Enrollment in Primary Education by Gender and Population Groups",results='hide',fig.keep='all', warning=FALSE, message=F}
+###Chart for the above table
+ggplot(impact3_2a_AGD, aes(x = HH04, y = mean_value, fill = HH04)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.7) +
+  geom_text(aes(label = sprintf("%.2f", mean_value)), 
+            position = position_dodge(width = 0.7), vjust = 0, size = 3.5) +  # Add values on bars
+  facet_wrap(~ pop_groups) +  # Create separate plots for each pop_group
+  labs(
+    title = "Enrollment in Primary Education by Gender and Population Groups",
+    x = "Gender",
+    y = "Proportion of Education Level"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for readability
+  ) +
+  scale_y_continuous(limits = c(0, 1)) +  # Set y-axis limits from 0 to 100
+  scale_x_discrete(limits = unique(impact3_2a_AGD$HH04))  # Ensure x-axis is not truncated (optional)
+
+
+
+```
+
+
+#### Core impact 3.2b Proportion of children and young people enrolled in secondary education
+
+This indicator measures the secondary education gross enrolment rate. It considers all children and young people, regardless of their age, who are officially registered in secondary education programmes in any type of secondary school and education institution, expressed as a percentage of the official total secondary-school aged population.
+
+*Note that this indicator is typically sourced from school/Ministry of Education administrative data. Where such data is not available, survey results have to be considered, reviewed and recorded as proxy data as the survey focuses on attendance at any time during the current school year, instead of official registration.*
+
+*For more information, see [indicator guidance](https://intranet.unhcr.org/content/dam/unhcr/intranet/protection-operations/prog-hub/program-cycle/indictors/core/impact/Core%20impact%203.2b%20Proportion%20of%20children%20and%20young%20people%20enrolled%20in%20secondary%20education.pdf).*
+
+```{r, include=FALSE}
+##table
+
+impact3_2b <- RMS_UGA_2024_ind %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop_groups is NA
+  group_by(pop_groups) %>%                          # Group by pop_groups
+  summarise(
+    var_name = "impact3_2b",                        # Name of the variable 
+    num_obs_uw = survey_total(!is.na(age_secondary), na.rm = TRUE),  # Unweighted total count for secondary age
+    denominator = survey_total(edu_secondary, na.rm = TRUE),         # Weighted total count for secondary education
+    edu_secondary_total = survey_total(edu_secondary, na.rm = TRUE), # Total for secondary education
+    age_secondary_total = survey_total(age_secondary, na.rm = TRUE)  # Total for secondary age
+  ) %>%
+  mutate(
+    mean_value = round(edu_secondary_total / age_secondary_total, 4)  # Calculate the mean value
+  )
+
+
+### TABLE BY strata
+
+##table
+
+impact3_2b_strata <- RMS_UGA_2024_ind_strata %>%
+  filter(!is.na(samp_strat)) %>%                     # Exclude if pop_groups is NA
+  group_by(samp_strat) %>%                          # Group by pop_groups
+  summarise(
+    var_name = "impact3_2b",                        # Name of the variable 
+    num_obs_uw = survey_total(!is.na(age_secondary), na.rm = TRUE),  # Unweighted total count for secondary age
+    denominator = survey_total(edu_secondary, na.rm = TRUE),         # Weighted total count for secondary education
+    edu_secondary_total = survey_total(edu_secondary, na.rm = TRUE), # Total for secondary education
+    age_secondary_total = survey_total(age_secondary, na.rm = TRUE)  # Total for secondary age
+  ) %>%
+  mutate(
+    mean_value = round(edu_secondary_total / age_secondary_total, 4)  # Calculate the mean value
+  )
+
+##table with AGD
+
+impact3_2b_AGD <- RMS_UGA_2024_ind %>%
+  filter(!is.na(HH04)) %>%  # Exclude 3 and 99, and ensure HH04 is not NA
+  group_by(pop_groups, HH04) %>%                          # Group by pop_groups
+  summarise(
+    var_name = "impact3_2b",                        # Name of the variable
+    num_obs_uw = survey_total(!is.na(age_secondary), na.rm = TRUE),  # Unweighted total count
+    denominator = survey_total(edu_secondary, na.rm = TRUE),         # Weighted total count
+    edu_secondary_total = survey_total(edu_secondary, na.rm = TRUE),   # Total for edu_primary
+    age_secondary_total = survey_total(age_secondary, na.rm = TRUE)    # Total for age_primary
+  ) %>%
+  mutate(
+    mean_value = round(edu_secondary_total / age_secondary_total, 4)  # Calculate the mean value
+  )
+```
+
+
+```{r fig10, echo=FALSE, fig.cap = "Enrollment in Secondary Education by Gender and Population Groups",results='hide',fig.keep='all', warning=FALSE, message=F}
+###Chart for the above table
+ggplot(impact3_2b_AGD, aes(x = HH04, y = mean_value, fill = HH04)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.7) +
+  geom_text(aes(label = sprintf("%.2f", mean_value)), 
+            position = position_dodge(width = 0.7), vjust = 0, size = 3.5) +  # Add values on bars
+  facet_wrap(~ pop_groups) +  # Create separate plots for each pop_group
+  labs(
+    title = "Enrollment in Secondary Education by Gender and Population Groups",
+    x = "Gender",
+    y = "Proportion of Education Level"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for readability
+  ) +
+  scale_y_continuous(limits = c(0, 1)) +  # Set y-axis limits from 0 to 100
+  scale_x_discrete(limits = unique(impact3_2a_AGD$HH04))  # Ensure x-axis is not truncated (optional)
+
+
+
+```
+
+
+#### Core impact 3.3 Proportion of people feeling safe walking alone in their neighbourhood after dark
+
+People feeling safe walking alone in their neighbourhood after dark are defined as those who respond they feel ‘safe’ or ‘very safe’ in the survey.
+
+Note this indicator only pertains to the self-reported feeling of ‘safety’ which is subjective and contextual. It does not relate to ‘security’ which is associated with additional external factors.
+
+*For more information, see [indicator guidance](https://intranet.unhcr.org/content/dam/unhcr/intranet/protection-operations/prog-hub/program-cycle/indictors/core/impact/Core%20impact%203.3%20Proportion%20of%20people%20that%20feel%20safe%20walking%20alone%20in%20their%20neighbourhood.pdf).*
+
+
+```{r, include=FALSE}
+###Table standard 
+
+
+RMS_UGA_2024_main_strata_resp <- main %>%
+  as_survey_design(
+    ids = NULL, 
+    strata = samp_strat, # Specify the column with cluster IDs
+    weights = wgh_strata_spec_resp, # Specify the column with survey weights
+    nest = TRUE              # Use TRUE if PSUs are nested within clusters (optional, based on your survey design)
+  )
+
+
+
+RMS_UGA_2024_main_resp <- main %>%
+  as_survey_design(
+    ids = NULL, 
+    strata = samp_strat, # Specify the column with cluster IDs
+    weights = wgh_samp_pop_restr_resp, # Specify the column with survey weights
+    nest = TRUE              # Use TRUE if PSUs are nested within clusters (optional, based on your survey design)
+  )
+
+
+
+# tables
+
+impact3_3 <- RMS_UGA_2024_main_resp %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "impact3_3",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(impact3_3, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+
+
+
+## with strata
+
+
+impact3_3_strata <- RMS_UGA_2024_main_strata_resp %>%
+  filter(!is.na(samp_strat)) %>%                     # Exclude if pop groups is NA
+  group_by(samp_strat) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "impact3_3",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(impact3_3, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+```
+
+
+```{r fig11, echo=FALSE, fig.cap = "Results of RBM Core Impact 3.3",results='hide',fig.keep='all', warning=FALSE, message=F}
+##Chart for the indicator above
+
+
+
+ggplot(impact3_3, aes(x = pop_groups, y = mean_value, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Impact 3.3",
+    x = "Population Groups",
+    y = "Mean Value with standard errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  )
+```
+
+
+```{r, include=FALSE}
+#### Table and chart that shows results by age/sex/diversity
+
+impact3_3_AGD <- RMS_UGA_2024_main_resp %>%
+  filter( !is.na(disability) & !is.na(HH07_cat) & HH07 > 18) %>%  # Exclude HH07_cat categories 1, 2, and 5
+  group_by(HH07_cat, HH04, disability, pop_groups) %>%
+  summarise(
+    var_name = "impact3_3",                                      # Name of the variable
+    num_obs_uw = survey_total(!is.na(impact3_3), vartype = NULL),  # Unweighted total count
+    denominator = survey_total(),                                # Weighted total count
+    mean_value = survey_mean(impact3_3, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with CI and SE
+  )
+
+```
+
+### Outcome area 1: Access to Territory, Registration and Documentation
+
+#### Core outcome 1.2 Proportion of children under 5 years of age whose births have been registered with a civil authority
+
+Children under the age of five years whose births have been registered are defined as those whose birth was reported as registered with civil authorities at the time of the survey or in possession of a birth certificate, regardless of whether this was shown to the interviewer. Survey data should be triangulated with other sources including national state civil registries and/or refugee/IDP registration data as available.
+
+*For more information, see [indicator guidance](https://intranet.unhcr.org/content/dam/unhcr/intranet/protection-operations/prog-hub/program-cycle/indictors/core/outcome/Core%20outcome%201.2%20Proportion%20of%20children%20under%205%20years%20of%20age%20whose%20births%20have%20been%20registered%20with%20a%20civil%20authority.pdf).*
+
+
+```{r, include=FALSE}
+###Table 
+
+
+outcome1_2 <- RMS_UGA_2024_ind %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "outcome1_2",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(outcome1_2, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+
+##Table with strata
+
+outcome1_2_strata <- RMS_UGA_2024_ind_strata %>%
+  filter(!is.na(samp_strat)) %>%                     # Exclude if pop groups is NA
+  group_by(samp_strat) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "outcome1_2",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(outcome1_2, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+
+
+
+##Table with disability and gender
+
+
+outcome1_2_AGD <- RMS_UGA_2024_ind %>%
+  filter( !is.na(pop_groups) & HH07 < 5) %>%  # Exclude HH07_cat categories 1, 2, and 5
+  group_by(pop_groups, HH04) %>%
+  summarise(
+    var_name = "outcome1_2",                                      # Name of the variable
+    num_obs_uw = n(),  # Unweighted total count
+    denominator = survey_total(),                                # Weighted total count
+    mean_value = survey_mean(outcome1_2, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with CI and SE
+  )
+
+
+
+##Chart with pop groups
+
+gender_colors <- c("Male" = "#8395B9", "Female" = "#E0E9FE")
+```
+
+
+```{r fig12, echo=FALSE, fig.cap = "RBM Core Outcome 1.2 by Population Groups and Gender",results='hide',fig.keep='all', warning=FALSE, message=F}
+
+ggplot(outcome1_2_AGD, aes(x = HH04, y = mean_value, fill = HH04)) +  # Fill mapped to HH04 for gender
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.7) +
+  geom_text(aes(label = sprintf("%.2f", mean_value)), 
+            position = position_dodge(width = 0.7), vjust = -0.5, size = 3) +  # Add values on bars
+  facet_wrap(~ pop_groups) +  # Create separate plots for each population group
+  labs(
+    title = "Outcome 1.2 by Population Groups and Gender",
+    x = "Gender",
+    y = "Proportion of children that registered",
+    caption = "Note: Only children under 5"
+  ) +
+  scale_fill_manual(values = gender_colors) +  # Apply custom colors for male and female
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for readability
+  ) +
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) 
+
+
+
+
+```
+
+#### Core outcome 1.3 Proportion of people with legally recognized identity documents or credentials
+
+People with legally recognized identity documents or credentials are defined as those who report to be in possession of valid documents that are legally recognised by national law and which may be used as proof of identity, to establish nationality or legal status and associated rights vis-à-vis the host State and/or UNHCR (including birth certificates, passports national or refugee IDs amongst others), regardless of whether these were shown to the interviewer.
+
+*Note this indicator is ideally sourced from official government sources or from proGres/PRIMES. Where such data is not available, survey results are considered, reviewed and recorded as proxy data.*
+
+*For more information, see [indicator guidance](https://intranet.unhcr.org/content/dam/unhcr/intranet/protection-operations/prog-hub/program-cycle/indictors/core/outcome/Core%20outcome%201.3%20Proportion%20of%20people%20with%20legally%20recognized%20identity%20documents%20or%20credentials.pdf).*
+
+```{r, include=FALSE}
+###Table by population groups
+
+outcome1_3 <- RMS_UGA_2024_ind %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "outcome1_3",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(outcome1_3, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+
+
+###Table by STRATA
+
+outcome1_3_strata <- RMS_UGA_2024_ind_strata %>%
+  filter(!is.na(samp_strat)) %>%                     # Exclude if pop groups is NA
+  group_by(samp_strat) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "outcome1_3",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(outcome1_3, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+```
+
+
+```{r fig13, echo=FALSE, fig.cap = "RBM Core Outcome 1.3 by Population Groups",results='hide',fig.keep='all', warning=FALSE, message=F}
+##Chart for the indicator above
+
+
+
+ggplot(outcome1_3, aes(x = pop_groups, y = mean_value, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Outcome 1.3",
+    x = "Population Groups",
+    y = "Mean Value with standard errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  )
+```
+
+
+```{r, include=FALSE}
+#### Table and chart that shows results by age/sex/diversity
+
+
+
+outcome1_3_AGD <- RMS_UGA_2024_ind %>%
+  filter(!is.na(HH04) & !is.na(disability) & !is.na(HH07_cat) & HH04 != 99 ) %>%                     # Exclude if HH07_cat is NA
+  group_by(pop_groups, HH07_cat, HH04, disability) %>%            # Group by Age, Gender, and Disability
+  summarise(                                       # Summarise to compute values
+    var_name = "outcome1_3",                        # Name of the variable
+    num_obs_uw = unweighted(n()),                  # Unweighted total count
+    denominator = survey_total(),                  # Weighted total count
+    mean_value = survey_mean(outcome1_3, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+```
+
+
+```{r fig14, echo=FALSE, fig.cap = "Outcome 1.3 by Gender, Age, and Disability Status",results='hide',fig.keep='all', warning=FALSE, message=F}
+####Chart with the AGD variables 
+
+ggplot(outcome1_3_AGD, aes(x = HH04, y = mean_value, fill = HH07_cat)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.7) +  # Grouped bar chart
+  geom_text(aes(label = sprintf("%.2f", mean_value)), 
+            position = position_dodge(width = 0.7), vjust = -0.5, size = 3) +  # Add values on top of bars
+  scale_fill_unhcr_d() +  # Apply UNHCR color palette
+  facet_wrap(~ pop_groups) +  # Create facets for each age group
+  labs(
+    title = "Outcome 1.3 by Gender, Age, and Disability Status",
+    x = "Gender",
+    y = "Mean Value",
+    fill = "Disability",
+    caption = "Note: Identity documents are adjusted to Ugandan context."
+  ) +
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels for readability
+    axis.text.y = element_text(size = 10)  # Adjust y-axis label size for readability
+  ) +
+  scale_y_continuous(limits = c(0, 1.1), expand = c(0, 0))
+```
+
+
+```{r, include=FALSE}
+#ind$REG01a # passport
+#ind$REG01b # birth certificate
+#ind$REG01c # National ID card
+#ind$REG01d # Residency permit (both temporary and permanent)
+#ind$REG01e # statelessness documentation
+#ind$REG01f # household card of address/family book
+#ind$REG01g # Refugee ID/Asylum seekers certificate/ Alien cards?
+#ind$REG01h # Drivers license
+#ind$REG01L # work permit
+#ind$REG02 # any other document establishes identity
+
+###define labels 
+
+identity_documents <- c(
+  "REG01a" = "Passport",
+  "REG01b" = "Birth certificate",
+  "REG01c" = "National ID card",
+  "REG01d" = "Residency permit (both temporary and permanent)",
+  "REG01e" = "Statelessness documentation",
+  "REG01f" = "Household card of address/family book",
+  "REG01g" = "Refugee ID/Asylum seekers certificate/ Alien cards",
+  "REG01h" = "Drivers license",
+  "REG01l" = "Work permit",
+  "REG02" = "Any other document"
+)
+
+# Calculate the percentage of '1's for each identity document by pop_groups
+identity_document_percentages <- RMS_UGA_2024_ind %>%
+  filter(!is.na(pop_groups)) %>%  # Exclude rows with missing pop_groups
+  group_by(pop_groups) %>%  # Group by pop_groups
+  summarise(across(c(REG01a, REG01b, REG01c, REG01d, REG01e, REG01f, REG01g, REG02),
+                   ~ mean(. == "1", na.rm = TRUE) * 100)) %>%
+  pivot_longer(cols = starts_with("REG01"),  # Pivot only the REG01 columns
+               names_to = "Document", 
+               values_to = "Percentage") %>%
+  mutate(Document = identity_documents[Document],  # Map column names to descriptive labels
+         pop_groups = as.factor(pop_groups))  # Ensure pop_groups is treated as a factor
+```
+
+
+```{r fig15, echo=FALSE, fig.cap = "Percentage of Individuals Holding Identity Documents by Population Group",results='hide',fig.keep='all', warning=FALSE, message=F}
+# Create the bar chart with pop_groups as facets
+ggplot(identity_document_percentages, aes(x = reorder(Document, Percentage), y = Percentage, fill = Document)) +
+  geom_bar(stat = "identity", width = 0.7) +
+  geom_text(aes(label = sprintf("%.0f%%", Percentage)), 
+            position = position_stack(vjust = 0.5), size = 3.5) +  # Add percentage labels on bars
+  coord_flip() +  # Flip the axes for better readability
+  facet_wrap(~ pop_groups) +  # Facet the plot by pop_groups
+  labs(
+    title = "Percentage of Individuals Holding Identity Documents by Population Group",
+    x = "Identity Document",
+    y = "Percentage",
+    caption = "Note: Percentages are calculated independently for each document by population group for adults only."
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.y = element_text(size = 9),  # Adjust text size for readability
+    legend.position = "none"  # Remove the legend for simplicity
+  )
+
+```
+
+
+### Outcome area 4: Gender-based Violence
+
+#### Core outcome 4.1 Proportion of people who know where to access available GBV services
+
+People who know where to access available GBV services are defined as those who self-report knowledge of at least one of the two available lifesaving gender-based violence services (Health or Psychosocial/Case Management services)  *in the aftermath of a GBV incident.*
+
+*For more information, see [indicator guidance](https://intranet.unhcr.org/content/dam/unhcr/intranet/protection-operations/prog-hub/program-cycle/indictors/core/outcome/Core%20outcome%204.1%20Proportion%20of%20people%20who%20know%20where%20to%20access%20available%20GBV%20services.pdf).*
+
+```{r, include=FALSE}
+###Table 
+
+outcome4_1 <- RMS_UGA_2024_main_resp %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "outcome4_1",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(outcome4_1, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+
+##table by strata
+
+outcome4_1_strata <- RMS_UGA_2024_main_strata_resp %>%
+  filter(!is.na(samp_strat)) %>%                     # Exclude if pop groups is NA
+  group_by(samp_strat) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "outcome4_1",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(outcome4_1, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+```
+
+
+```{r fig16, echo=FALSE, fig.cap = "Results of RBM Core Outcome 4.1 by Population Groups",results='hide',fig.keep='all', warning=FALSE, message=F}
+##Chart for the indicator above
+
+
+ggplot(outcome4_1, aes(x = pop_groups, y = mean_value, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Outcome 4.1",
+    x = "Population Groups",
+    y = "Mean value with standard errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  )
+```
+
+
+```{r, include=FALSE}
+#### Table and chart that shows results by age/sex/diversity
+
+outcome4_1_AGD <- RMS_UGA_2024_main_resp %>%
+  filter( !is.na(disability) & !is.na(HH07_cat) & HH07 > 18) %>%  # only 18 and above 
+  group_by(pop_groups, HH07_cat, HH04, disability) %>%
+  summarise(
+    var_name = "outcome4_1",                                      # Name of the variable
+    num_obs_uw = survey_total(!is.na(outcome4_1), vartype = NULL),  # Unweighted total count
+    denominator = survey_total(),                                # Weighted total count
+    mean_value = survey_mean(outcome4_1, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with CI and SE
+  ) %>%
+  mutate( pop_groups = as.factor(pop_groups)) 
+
+####Simple bar chart of GBV01
+
+
+
+###define labels 
+
+gbv_services <- c(
+  "GBV01a" = "Health services",
+  "GBV01b" = "Psycho-social services",
+  "GBV01c" = "Safety and security services",
+  "GBV01d" = "Legal assistance"
+)
+
+# Calculate the percentage of '1's for each GBV service by pop_groups
+gbv01_percentages <- RMS_UGA_2024_main_resp %>%
+  filter(!is.na(pop_groups)) %>%  # Exclude rows with missing pop_groups
+  group_by(pop_groups) %>%
+  summarise(across(c(GBV01a, GBV01b, GBV01c, GBV01d),
+                   ~ mean(. == "1", na.rm = TRUE) * 100)) %>%
+  pivot_longer(cols = starts_with("GBV01"),  # Pivot only the GBV01 columns
+               names_to = "Services", 
+               values_to = "Percentage") %>%
+  mutate(Services = gbv_services[Services],  # Map column names to descriptive labels
+         pop_groups = as.factor(pop_groups))  # Ensure pop_groups is a factor
+```
+
+
+```{r fig17, echo=FALSE, fig.cap = "Percentage of Individuals Accessing GBV Services by Population Group",results='hide',fig.keep='all', warning=FALSE, message=F}
+# Create the bar chart with pop_groups as facets
+ggplot(gbv01_percentages, aes(x = reorder(Services, Percentage), y = Percentage, fill = Services)) +
+  geom_bar(stat = "identity", width = 0.7) +
+  geom_text(aes(label = sprintf("%.1f%%", Percentage)), 
+            position = position_stack(vjust = 0.5), size = 3.5) +  # Add percentage labels on bars
+  coord_flip() +  # Flip the axes for better readability
+  facet_wrap(~ pop_groups) +  # Facet the plot by pop_groups
+  labs(
+    title = "Percentage of Individuals Accessing GBV Services by Population Group",
+    x = "GBV Service",
+    y = "Percentage",
+    caption = "Note: Percentages are calculated independently for each GBV service and population group."
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.y = element_text(size = 9),  # Adjust text size for readability
+    legend.position = "none"  # Remove the legend for simplicity
+  )
+```
+
+
+```{r, include=FALSE}
+##Table with education level for randomly selected adult
+
+
+outcome4_1_EDU <- RMS_UGA_2024_main_resp %>%
+  filter(!is.na(EDU01_random) ) %>%  # Exclude EDU01_random
+  group_by(pop_groups, EDU01_random) %>%
+  summarise(
+    var_name = "outcome4_1",                                      # Name of the variable
+    num_obs_uw = survey_total(),  # Unweighted total count
+    denominator = survey_total(),                                # Weighted total count
+    mean_value = survey_mean(outcome4_1, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with CI and SE
+  )
+
+
+
+
+```
+
+
+#### Core outcome 4.2 Proportion of people who do not accept violence against women
+
+People who do not accept violence against women are defined as those who respond ‘no’ to all of the five standard questions, i.e., believe that a husband is not justified in hitting or beating his wife for any of the five listed reasons: 1) Going out without telling him; 2) Neglecting the children; 3) Arguing with him; 4) Refusing to have sexual intercourse with him; 5) Burning food.
+
+*For more information, see [indicator guidance](https://intranet.unhcr.org/content/dam/unhcr/intranet/protection-operations/prog-hub/program-cycle/indictors/core/outcome/Core%20outcome%204.2%20Proportion%20of%20people%20who%20do%20not%20accept%20violence%20against%20women.pdf).*
+
+
+
+```{r, include=FALSE}
+##Table 
+
+outcome4_2 <- RMS_UGA_2024_main_resp %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "outcome4_2",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(outcome4_2, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+
+##Table with strata
+
+outcome4_2_strata<- RMS_UGA_2024_main_strata_resp %>%
+  filter(!is.na(samp_strat)) %>%                     # Exclude if pop groups is NA
+  group_by(samp_strat) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "outcome4_2",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(outcome4_2, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+
+
+##Chart for the indicator above
+```
+
+
+```{r fig18, echo=FALSE, fig.cap = "Results of RBM Core Outcome 4.2",results='hide',fig.keep='all', warning=FALSE, message=F}
+ggplot(outcome4_2, aes(x = pop_groups, y = mean_value, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Outcome 4.2",
+    x = "Population Groups",
+    y = "Mean value with standard errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  )
+```
+
+
+```{r, include=FALSE}
+#### Table and chart that shows results by age/sex/diversity
+
+outcome4_2_AGD <- RMS_UGA_2024_main_resp %>%
+  filter(!is.na(HH04) & !is.na(disability) & !is.na(HH07_cat) & HH07 > 18) %>%  # only 18 and above 
+  group_by(pop_groups, HH07_cat, HH04, disability) %>%
+  summarise(
+    var_name = "outcome4_2",                                      # Name of the variable
+    num_obs_uw = survey_total(!is.na(outcome4_2), vartype = NULL),  # Unweighted total count
+    denominator = survey_total(),                                # Weighted total count
+    mean_value = survey_mean(outcome4_2, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with CI and SE
+  )
+
+
+
+
+
+# Define options for VAW questions
+vaw_options <- c(
+  VAW01a = "If she goes out without telling him",
+  VAW01b = "If she neglects the children",
+  VAW01c = "If she argues with him",
+  VAW01d = "If she refuses to have sex with him",
+  VAW01e = "If she burns the food"
+)
+
+vaw01_percentages <- RMS_UGA_2024_main_resp %>%
+  filter(!is.na(pop_groups)) %>%  # Exclude rows with missing pop_groups
+  group_by(pop_groups) %>%  # Group by pop_groups
+  summarise(across(c(VAW01a, VAW01b, VAW01c, VAW01d, VAW01e),
+                   ~ mean(. == "1", na.rm = TRUE) * 100), .groups = "drop") %>%  # Remove grouping after summarizing
+  pivot_longer(cols = c(VAW01a, VAW01b, VAW01c, VAW01d, VAW01e),
+               names_to = "Question", 
+               values_to = "Percentage") %>%
+  mutate(Question = vaw_options[Question],  # Map column names to descriptive labels
+         pop_groups = as.factor(pop_groups))  # Ensure pop_groups is a factor
+```
+
+
+```{r fig19, echo=FALSE, fig.cap = "Justification for Violence Against Women by Population Group",results='hide',fig.keep='all', warning=FALSE, message=F}
+# Create the bar chart, with separate plots for each pop_groups
+ggplot(vaw01_percentages, aes(x = reorder(Question, Percentage), y = Percentage, fill = Question)) +
+  geom_bar(stat = "identity", width = 0.7) +
+  geom_text(aes(label = sprintf("%.1f%%", Percentage)), 
+            position = position_stack(vjust = 0.5), size = 3.5) +  # Add percentage labels on bars
+  coord_flip() +  # Flip the axes for better readability
+  facet_wrap(~ pop_groups) +  # Create separate plots for each pop_groups
+  labs(
+    title = "Justification for Violence Against Women by Population Group",
+    x = "Justification",
+    y = "Percentage",
+    caption = "Note: Percentages represent the proportion of respondents who agree with the justification."
+  ) +
+  scale_fill_unhcr_d() +  # Apply UNHCR color palette
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.y = element_text(size = 9),  # Adjust text size for readability
+    legend.position = "none"  # Remove the legend for simplicity
+  )
+
+
+
+```
+
+### Outcome area 5: Child Protection
+
+#### Core outcome 5.2 Proportion of children who participate in community-based child protection programmes
+
+Children who participate in community-based child protection programmes are defined as those aged between 4-17 years who have participated at least once in the last month in sports, arts, cultural activities, or other after-school programmes for children outside the home that were in a physically safe area with adults supervising these activities.
+
+*For more information, see [indicator guidance](https://intranet.unhcr.org/content/dam/unhcr/intranet/protection-operations/prog-hub/program-cycle/indictors/core/outcome/Core%20outcome%205.2%20Proportion%20of%20children%20who%20participate%20in%20community-based%20child%20protection%20programmes.pdf).*
+
+```{r, include=FALSE}
+##Table 
+
+outcome5_2 <- RMS_UGA_2024_ind %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "outcome5_2",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(outcome5_2, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+
+
+##TABLE with strata
+
+
+outcome5_2_strata <- RMS_UGA_2024_ind_strata %>%
+  filter(!is.na(samp_strat)) %>%                     # Exclude if pop groups is NA
+  group_by(samp_strat) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "outcome5_2",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(outcome5_2, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+
+
+##Table with disability and gender
+
+
+outcome5_2_AGD <- RMS_UGA_2024_ind %>%
+  filter(!is.na(HH04) & !is.na(disability) & !is.na(pop_groups) & HH04 != 99) %>%  # Missing pipe added here
+  group_by(pop_groups,HH04, disability) %>%
+  summarise(
+    var_name = "outcome5_2",                                      # Name of the variable
+    num_obs_uw = survey_total(!is.na(outcome5_2), vartype = NULL),  # Unweighted total count
+    denominator = survey_total(),                                  # Weighted total count
+    mean_value = survey_mean(outcome5_2, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with CI and SE
+  )
+```
+
+
+```{r fig20, echo=FALSE, fig.cap = "Outcome 5.2 by Population Groups and Gender",results='hide',fig.keep='all', warning=FALSE, message=F}
+##Chart with pop groups
+
+gender_colors <- c("Male" = "#8395B9", "Female" = "#E0E9FE")
+
+ggplot(outcome5_2_AGD, aes(x = HH04, y = mean_value, fill = HH04)) +  # Fill mapped to HH04 for gender
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.7) +
+  facet_wrap(~ pop_groups) +  # Create separate plots for each population group
+  geom_text(aes(label = sprintf("%.2f", mean_value)),  # Add value labels on bars
+            position = position_dodge(width = 0.7), 
+            vjust = -0.3, size = 3.5) +  # Adjust position and size of the labels
+  labs(
+    title = "Outcome 5.2 by Population Groups and Gender",
+    x = "Gender",
+    y = "Proportion of Children",
+    caption = "Note: Only children between 5 to 17"
+  ) +
+  scale_fill_manual(values = gender_colors) +  # Apply custom colors for male and female
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for readability
+  ) +
+  scale_y_continuous(limits = c(0, 0.5), expand = c(0, 0))  # Adjust y-axis limits
+
+
+```
+
+
+### Outcome area 8: Well-being and Basic Needs
+
+#### Core outcome 8.2 Proportion of people with primary reliance on clean (cooking) fuels and technology
+
+People with primary reliance on clean cooking fuels and technology are defined as those in households that use one of the following most of the time as their source for cooking: solar cooker, electric stove, piped natural gas stove, biogas stove, LPG/cooking gas stove, liquid fuel stove with alcohol / ethanol.
+
+*For more information, see [indicator guidance](https://intranet.unhcr.org/content/dam/unhcr/intranet/protection-operations/prog-hub/program-cycle/indictors/core/outcome/Core%20outcome%208.2%20Proportion%20of%20people%20with%20primary%20reliance%20on%20clean%20(cooking)%20fuels%20and%20technology.pdf).*
+
+```{r, include=FALSE}
+###Table 
+
+outcome8_2 <- RMS_UGA_2024_main %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Show results disaggregated by pop groups
+  summarise(                                         # put all variables here
+    var_name = "outcome8_2",                          # name of the variable
+    num_obs_uw = unweighted(n()),                    # unweighted total count
+    denominator = survey_total(),                      # weighted total count
+    mean_value = survey_mean(outcome8_2, vartype = c("ci", "se"), na.rm = TRUE) # indicator value ( weighted) with CI and SE
+  )
+
+##Table with strata
+
+outcome8_2_strata <- RMS_UGA_2024_main_strata %>%
+  filter(!is.na(samp_strat)) %>%                     # Exclude if pop groups is NA
+  group_by(samp_strat) %>%                           # Show results disaggregated by pop groups
+  summarise(                                         # put all variables here
+    var_name = "outcome8_2",                          # name of the variable
+    num_obs_uw = unweighted(n()),                    # unweighted total count
+    denominator = survey_total(),                      # weighted total count
+    mean_value = survey_mean(outcome8_2, vartype = c("ci", "se"), na.rm = TRUE) # indicator value ( weighted) with CI and SE
+  )
+```
+
+
+```{r fig21, echo=FALSE, fig.cap = "Outcome 8.2 by Population Groups",results='hide',fig.keep='all', warning=FALSE, message=F}
+###Chart of outcome 8_2 by pop groups
+
+ggplot(outcome8_2_strata, aes(x = samp_strat, y = mean_value, fill = samp_strat)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  # Add labels for mean_value
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Outcome 8.2",
+    x = "Population Groups with strata",
+    y = "Mean Value with Standard Errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  )
+```
+
+
+```{r, include=FALSE}
+# Define stove categories based on the provided list
+stove_labels <- c(
+  "1" = "Solar cooker (thermal energy from the sun)",
+  "2" = "Electric stove",
+  "3" = "Piped natural gas stove",
+  "4" = "Biogas stove",
+  "5" = "Liquefied petroleum gas (LPG)/cooking gas stove",
+  "6" = "Manufactured solid fuel stove",
+  "7" = "Traditional solid fuel stove (non-manufactured)",
+  "8" = "Moveable firepan",
+  "9" = "Three stone stove/open fire",
+  "10" = "Liquid fuel stove",
+  "96" = "Other, specify"
+)
+
+# Summarize the counts and percentages for each category, grouped by pop_groups
+
+cook02_percentages <- RMS_UGA_2024_main %>%
+  filter(!is.na(COOK02)) %>%  # Exclude missing values
+  as.data.frame() %>%  # Convert survey design object to a regular data frame
+  count(pop_groups, COOK02) %>%  # Count occurrences by pop_groups and COOK02
+  group_by(pop_groups) %>%  # Group by pop_groups to calculate percentages within each group
+  mutate(Percentage = n / sum(n) * 100) %>%  # Calculate the percentage within each group
+  mutate(COOK02 = factor(COOK02, levels = names(stove_labels), labels = stove_labels)) %>%  # Recode COOK02 labels
+  ungroup()  # Ungroup for further operations
+```
+
+
+```{r fig22, echo=FALSE, fig.cap = "Distribution of Stove Types (COOK02) by Population Groups",results='hide',fig.keep='all', warning=FALSE, message=F}
+# Create the bar chart
+ggplot(cook02_percentages, aes(x = reorder(COOK02, Percentage), y = Percentage, fill = COOK02)) +
+  geom_bar(stat = "identity", width = 0.7) +
+  geom_text(aes(label = sprintf("%.1f%%", Percentage)), 
+            position = position_stack(vjust = 0.5), size = 3.5) +  # Add percentage labels
+  facet_wrap(~ pop_groups) +  # Separate by pop_groups
+  coord_flip() +  # Flip for better readability
+  labs(
+    title = "Distribution of Stove Types (COOK02) by Population Groups",
+    x = "Stove Type",
+    y = "Percentage",
+    caption = "Source: RMS UGA 2024"
+  ) +
+  scale_fill_unhcr_d() +  # Apply UNHCR color palette
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.y = element_text(size = 10),  # Adjust text size for readability
+    legend.position = "none"  # Remove legend for simplicity
+  )
+
+```
+
+
+### Outcome area 9: Sustainable housing and Settlements
+
+#### Core outcome 9.1 Proportion of people living in habitable and affordable housing
+
+People who live in habitable and affordable housing are defined as those who live in 1) households which are not overcrowded, 2) housing that is habitable in that it provides protection from cold, damp, heat, rain, wind, and other threats to health, structural hazards, and disease vectors, and 3) who self-report being able to afford to pay rent without financial distress.
+
+*Note this indicator does [not]{.underline} measure ‘adequate’ housing which would include aspects such as security of tenure, availability of other basic services and infrastructure, accessibility, location of housing, and cultural appropriateness.*
+
+*For more information, see [indicator guidance](https://intranet.unhcr.org/content/dam/unhcr/intranet/protection-operations/prog-hub/program-cycle/indictors/core/outcome/Core%20outcome%209.1%20Proportion%20of%20people%20living%20in%20habitable%20and%20affordable%20housing.pdf).*
+
+
+```{r, include=FALSE}
+####Standard tables 
+
+
+
+composite_outcome9_1 <- RMS_UGA_2024_main %>%
+  as.data.frame() %>%  # Convert survey object to a regular data frame
+  select(pop_groups, dwe05_cat, habitablehousing, dwe09_cat) %>%
+  pivot_longer(cols = c(dwe05_cat, habitablehousing, dwe09_cat),  # Pivot the three variables
+               names_to = "facility", 
+               values_to = "access") %>%
+  group_by(pop_groups, facility) %>%
+  summarise(percentage = mean(access, na.rm = TRUE) * 100) %>%
+  ungroup()
+```
+
+
+```{r fig23, echo=FALSE, fig.cap = "Access to Habitable Shelter by Population Group",results='hide',fig.keep='all', warning=FALSE, message=F}
+###Chart for above with all dimensions 
+
+
+ggplot(composite_outcome9_1, aes(x = facility, y = percentage, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.7) +
+  geom_text(aes(label = sprintf("%.1f%%", percentage)), 
+            position = position_dodge(0.7), vjust = -0.5, size = 3.5) +  # Add percentage labels on bars
+  scale_fill_unhcr_d() +  # Use UNHCR color palette
+  scale_x_discrete(labels = c(
+    "dwe05_cat" = "Not overcrowded",
+    "habitablehousing" = "Habitable Housing",
+    "dwe09_cat" = "Affordable"
+  )) +  # Add descriptive labels to the x-axis
+  labs(
+    title = "Access to Adequate Housing Facilities by Population Group",
+    x = "Facility",
+    y = "Percentage Access",
+    fill = "Population Groups"
+  ) +
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),  # Rotate x-axis labels for readability
+    strip.text = element_text(size = 10)  # Adjust label size
+  ) +
+  scale_y_continuous(limits = c(0, 100), expand = c(0, 0))
+```
+
+
+```{r, include=FALSE}
+outcome9_1 <- RMS_UGA_2024_main %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Show results disaggregated by pop groups
+  summarise(                                         # put all variables here
+    var_name = "outcome9_1",                          # name of the variable
+    num_obs_uw = unweighted(n()),                    # unweighted total count
+    denominator = survey_total(),                      # weighted total count
+    mean_value = survey_mean(outcome9_1, vartype = c("ci", "se"), na.rm = TRUE) # indicator value ( weighted) with CI and SE
+  )
+
+
+
+#Table by strata
+
+outcome9_1_strata <- RMS_UGA_2024_main_strata %>%
+  filter(!is.na(samp_strat)) %>%                     # Exclude if pop groups is NA
+  group_by(samp_strat) %>%                           # Show results disaggregated by pop groups
+  summarise(                                         # put all variables here
+    var_name = "outcome9_1",                          # name of the variable
+    num_obs_uw = unweighted(n()),                    # unweighted total count
+    denominator = survey_total(),                      # weighted total count
+    mean_value = survey_mean(outcome9_1, vartype = c("ci", "se"), na.rm = TRUE) # indicator value ( weighted) with CI and SE
+  )
+```
+
+
+```{r fig24, echo=FALSE, fig.cap = "Results of RBM Core Outcome 9.1 by Population Group",results='hide',fig.keep='all', warning=FALSE, message=F}
+###Chart of impact 9.1 by pop groups
+
+ggplot(outcome9_1, aes(x = pop_groups, y = mean_value, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  # Add labels for mean_value
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Outcome 9.1",
+    x = "Population Groups",
+    y = "Mean Value with Standard Errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  )
+
+
+
+
+```
+
+#### Core outcome 9.2 Proportion of people that have energy to ensure lighting
+
+People who have energy to ensure lighting are defined as those in households that use one of the following as light source most of the time: electricity (including solar panels), solar home systems, solar-powered lantern or flashlight, rechargeable flashlight, mobile, torch or lantern, battery powered flashlight, torch or lantern, biogas lamp, LPG lamp.
+
+*For more information, see [indicator guidance](https://intranet.unhcr.org/content/dam/unhcr/intranet/protection-operations/prog-hub/program-cycle/indictors/core/outcome/Core%20outcome%209.2%20Proportion%20of%20people%20that%20have%20energy%20to%20ensure%20lighting.pdf).*
+
+
+```{r, include=FALSE}
+##tables
+
+outcome9_2 <- RMS_UGA_2024_main %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Show results disaggregated by pop groups
+  summarise(                                         # put all variables here
+    var_name = "outcome9_2",                          # name of the variable
+    num_obs_uw = unweighted(n()),                    # unweighted total count
+    denominator = survey_total(),                      # weighted total count
+    mean_value = survey_mean(outcome9_2, vartype = c("ci", "se"), na.rm = TRUE) # indicator value ( weighted) with CI and SE
+  )
+
+
+outcome9_2_strata <- RMS_UGA_2024_main_strata %>%
+  filter(!is.na(samp_strat)) %>%                     # Exclude if pop groups is NA
+  group_by(samp_strat) %>%                           # Show results disaggregated by pop groups
+  summarise(                                         # put all variables here
+    var_name = "outcome9_2",                          # name of the variable
+    num_obs_uw = unweighted(n()),                    # unweighted total count
+    denominator = survey_total(),                      # weighted total count
+    mean_value = survey_mean(outcome9_2, vartype = c("ci", "se"), na.rm = TRUE) # indicator value ( weighted) with CI and SE
+  )
+```
+
+
+```{r fig25, echo=FALSE, fig.cap = "Results of RBM Core Outcome 9.2 by Population Groups",results='hide',fig.keep='all', warning=FALSE, message=F}
+###Chart of outcome 9.2 by pop groups
+
+ggplot(outcome9_2, aes(x = pop_groups, y = mean_value, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  # Add labels for mean_value
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Outcome 9.2",
+    x = "Population Groups",
+    y = "Mean Value with Standard Errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  )
+```
+
+
+```{r, include=FALSE}
+###Show the bar chart for LIGHT02
+
+table(main$LIGHT02)
+
+
+# Define stove categories based on the provided list
+lighting_labels <- c(
+  "1" =	"Electricity",
+  "2" =	"Solar home system",
+  "3"	= "Solar-powered lantern or flashlight",
+  "4" = "Rechargeable flashlight, mobile, torch or lantern",
+  "5" = "Battery powered flashlight, torch or lantern",
+  "6" =	"Biogas lamp",
+  "7" =	"LPG lamp",
+  "8" = "Gasoline lamp",
+  "9"	= "Kerosene or paraffin lamp",
+  "10" = "Oil lamp",
+  "11" = "Candle",
+  "12" ="Open fire",
+  "96" ="Other, specify"
+)
+
+## composite
+
+# Summarize the counts and percentages for each category, grouped by pop_groups
+
+light02_percentages <- RMS_UGA_2024_main %>%
+  filter(!is.na(LIGHT02)) %>%  # Exclude missing values
+  as.data.frame() %>%  # Convert survey design object to a regular data frame
+  count(pop_groups, LIGHT02) %>%  # Count occurrences by pop_groups and COOK02
+  group_by(pop_groups) %>%  # Group by pop_groups to calculate percentages within each group
+  mutate(Percentage = n / sum(n) * 100) %>%  # Calculate the percentage within each group
+  mutate(LIGHT02 = factor(LIGHT02, levels = names(lighting_labels), labels = lighting_labels)) %>%  # Recode COOK02 labels
+  ungroup()  # Ungroup for further operations
+```
+
+
+```{r fig26, echo=FALSE, fig.cap = "Distribution of Energy of Lighting (LIGHT02)",results='hide',fig.keep='all', warning=FALSE, message=F}
+# Create the chart
+
+ggplot(light02_percentages, aes(x = reorder(LIGHT02, Percentage), y = Percentage, fill = LIGHT02)) +
+  geom_bar(stat = "identity", width = 0.7) +
+  geom_text(aes(label = sprintf("%.1f%%", Percentage)), 
+            position = position_stack(vjust = 0.5), size = 3.5) +  # Add percentage labels
+  coord_flip() +  # Flip the chart for better readability
+  labs(
+    title = "Distribution of Energy of Lighting (LIGHT02)",
+    x = "Lighting Type",
+    y = "Percentage",
+    caption = "Source: RMS UGA 2024"
+  ) +
+  facet_wrap(~ pop_groups) +  # Separate by pop_groups
+  scale_fill_unhcr_d() +  # Apply UNHCR color palette
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.y = element_text(size = 10),  # Adjust text size for readability
+    legend.position = "none"  # Remove legend for simplicity
+  )
+
+
+
+```
+
+### Outcome area 10: Healthy Lives
+
+#### Core outcome 10.1 Proportion of children aged 9 months to five years who have received measles vaccination
+
+Children who have received measles vaccination are defined as those aged between 9 months to five years who have received at least one dose of a measles containing vaccine (measles or MMR - Measles Mumps and Rubella).
+
+*For more information, see [indicator guidance](https://intranet.unhcr.org/content/dam/unhcr/intranet/protection-operations/prog-hub/program-cycle/indictors/core/outcome/Core%20outcome%2010.1%20Proportion%20of%20children%20aged%209%20months%20to%20five%20years%20who%20have%20received%20measles%20vaccination.pdf).*
+
+
+```{r, include=FALSE}
+##tABLES 
+
+outcome10_1 <- RMS_UGA_2024_ind %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "outcome10_1",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(outcome10_1, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+
+
+
+outcome10_1_strata <- RMS_UGA_2024_ind_strata %>%
+  filter(!is.na(samp_strat)) %>%                     # Exclude if pop groups is NA
+  group_by(samp_strat) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "outcome10_1",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(outcome10_1, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+```
+
+
+```{r fig27, echo=FALSE, fig.cap = "Results of RBM Core Outcome 10.1 by Population Groups",results='hide',fig.keep='all', warning=FALSE, message=F}
+###Chart of outcome 10.1 by pop groups
+
+ggplot(outcome10_1, aes(x = pop_groups, y = mean_value, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  # Add labels for mean_value
+  scale_y_continuous(limits = c(0, 1.1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Outcome 10.1",
+    x = "Population Groups",
+    y = "Mean Value with Standard Errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  )
+```
+
+
+```{r, include=FALSE}
+##Table with disability and gender
+
+
+outcome10_1_AGD <- RMS_UGA_2024_ind %>%
+  filter(is.na(disability) & !is.na(pop_groups) & HH07 < 5) %>%  # Exclude HH07_cat categories 1, 2, and 5
+  group_by(HH07_cat, HH04, pop_groups) %>%
+  summarise(
+    var_name = "outcome10_1",                                      # Name of the variable
+    num_obs_uw = survey_total(!is.na(outcome10_1), vartype = NULL),  # Unweighted total count
+    denominator = survey_total(),                                # Weighted total count
+    mean_value = survey_mean(outcome10_1, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with CI and SE
+  )
+
+
+##Chart with pop groups
+
+gender_colors <- c("Male" = "#8395B9", "Female" = "#E0E9FE")
+```
+
+
+```{r fig28, echo=FALSE, fig.cap = "Results of RBM Core Outcome 10.1 by Population Groups and Gender",results='hide',fig.keep='all', warning=FALSE, message=F}
+ggplot(outcome10_1_AGD, aes(x = HH04, y = mean_value, fill = HH04)) +  # Fill mapped to HH04 for gender
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.7) +
+  geom_text(aes(label = sprintf("%.2f", mean_value)), 
+            position = position_dodge(width = 0.7), vjust = -0.5, size = 3) +  # Add values on bars
+  facet_wrap(~ pop_groups) + 
+    scale_y_continuous(limits = c(0, 1.1), expand = c(0, 0)) +# Create separate plots for each population group
+  labs(
+    title = "Outcome 10.1 by Population Groups and Gender",
+    x = "Gender",
+    y = "Proportion of Children",
+    caption = "Note: Only children under 5"
+  ) +
+  scale_fill_manual(values = gender_colors) +  # Apply custom colors for male and female
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for readability
+  )
+
+
+
+
+```
+
+
+#### Core outcome 10.2 Proportion of births attended by skilled health personnel
+
+Births attended by skilled health personnel are defined as those, where women aged 15-49, who had a live birth in the past two years, were assisted during delivery by skilled health professionals: doctors, nurses or midwives. The place of latest live childbirth is also recorded.
+
+*For more information, see [indicator guidance](https://intranet.unhcr.org/content/dam/unhcr/intranet/protection-operations/prog-hub/program-cycle/indictors/core/outcome/Core%20outcome%2010.2%20Proportion%20of%20births%20attended%20by%20skilled%20health%20personnel.pdf)*
+
+```{r, include=FALSE}
+outcome10_2 <- RMS_UGA_2024_main %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "outcome10_2",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(outcome10_2, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+
+##by strata
+
+
+outcome10_2_strata <- RMS_UGA_2024_main %>%
+  filter(!is.na(samp_strat)) %>%                     # Exclude if pop groups is NA
+  group_by(samp_strat) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "outcome10_2",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(outcome10_2, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+```
+
+
+```{r fig29, echo=FALSE, fig.cap = "Results of RBM Core Outcome 10.2 by Population Groups",results='hide',fig.keep='all', warning=FALSE, message=F}
+###Chart of outcome 10.2 by pop groups
+
+ggplot(outcome10_2, aes(x = pop_groups, y = mean_value, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  # Add labels for mean_value
+  scale_y_continuous(limits = c(0, 1.1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Outcome 10.2",
+    x = "Population Groups",
+    y = "Mean Value with Standard Errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  ) +
+  scale_y_continuous(limits = c(0, 1.1), expand = c(0, 0)) 
+
+
+
+```
+
+
+### Outcome area 12: Clean Water, Sanitation and Hygiene
+
+#### Core outcome 12.1 Proportion of people using at least basic drinking water services
+
+People using at least basic drinking water services are defined as those in households using improved sources of drinking water either in their dwelling/yard/plot or within 30 minutes round trip collection time, including queuing.
+
+*For more information, see [indicator guidance](https://intranet.unhcr.org/content/dam/unhcr/intranet/protection-operations/prog-hub/program-cycle/indictors/core/outcome/Core%20outcome%2012.1%20Proportion%20of%20people%20using%20at%20least%20basic%20drinking%20water%20services.pdf).*
+
+```{r, include=FALSE}
+####Standard tables 
+
+
+composite_outcome12_1 <- RMS_UGA_2024_main %>%
+  as_tibble() %>%  # Convert survey object to tibble
+  select(pop_groups, dwa_cond1, dwa_cond2, dwa_cond3) %>%
+  pivot_longer(cols = c(dwa_cond1, dwa_cond2, dwa_cond3),  # Pivot the three variables
+               names_to = "facility", 
+               values_to = "conditions") %>%
+  group_by(pop_groups, facility) %>%
+  summarise(percentage = mean(conditions, na.rm = TRUE) * 100) %>%
+  ungroup()
+```
+
+
+```{r fig30, echo=FALSE, fig.cap = "Access to Basic Drinking Services",results='hide',fig.keep='all', warning=FALSE, message=F}
+###Chart for above with all dimensions 
+
+
+ggplot(composite_outcome12_1, aes(x = facility, y = percentage, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.7) +
+  geom_text(aes(label = sprintf("%.1f%%", percentage)), 
+            position = position_dodge(0.7), vjust = -0.5, size = 3.5) +  # Add percentage labels on bars
+  scale_fill_unhcr_d() +  # Use UNHCR color palette
+  scale_x_discrete(labels = c(
+    "dwa_cond1" = "Reachable under 30 minutes ",
+    "dwa_cond2" = "From an improved source",
+    "dwa_cond3" = "In the dwelling/yard/plot"
+  )) +  # Add descriptive labels to the x-axis
+  labs(
+    title = "Access to Basic Drinking Services",
+    x = "At least basic drinking water services",
+    y = "Percentage Access",
+    fill = "Population Groups"
+  ) +
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),  # Rotate x-axis labels for readability
+    strip.text = element_text(size = 10)  # Adjust label size
+  ) +
+  scale_y_continuous(limits = c(0, 110), expand = c(0, 0))
+```
+
+
+```{r, include=FALSE}
+##Table by population groups
+
+RMS_UGA_2024_main <- main %>%
+  as_survey_design(
+    ids = NULL,          # Numeric or factor cluster IDs
+    strata = samp_strat,       # Strata as character or factor
+    weights = wgh_samp_pop_restr, # Numeric survey weights
+    nest = TRUE                # Use TRUE if PSUs are nested within strata
+  )
+
+RMS_UGA_2024_main_strata <- main %>%
+  as_survey_design(
+    ids = NULL,          # Numeric or factor cluster IDs
+    strata = samp_strat,       # Strata as character or factor
+    weights = wgh_strata_spec, # Numeric survey weights
+    nest = TRUE                # Use TRUE if PSUs are nested within strata
+  )
+
+
+outcome12_1 <- RMS_UGA_2024_main %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Show results disaggregated by pop groups
+  summarise(                                         # put all variables here
+    var_name = "outcome12_1",                          # name of the variable
+    num_obs_uw = unweighted(n()),                    # unweighted total count
+    denominator = survey_total(),                      # weighted total count
+    mean_value = survey_mean(outcome12_1, vartype = c("ci", "se"), na.rm = TRUE) # indicator value ( weighted) with CI and SE
+  )
+
+
+outcome12_1_strata <- RMS_UGA_2024_main %>%
+  filter(!is.na(samp_strat)) %>%                     # Exclude if pop groups is NA
+  group_by(samp_strat) %>%                           # Show results disaggregated by pop groups
+  summarise(                                         # put all variables here
+    var_name = "outcome12_1",                          # name of the variable
+    num_obs_uw = unweighted(n()),                    # unweighted total count
+    denominator = survey_total(),                      # weighted total count
+    mean_value = survey_mean(outcome12_1, vartype = c("ci", "se"), na.rm = TRUE) # indicator value ( weighted) with CI and SE
+  )
+```
+
+
+```{r fig31, echo=FALSE, fig.cap = "Results of RBM Core Outcome 12.1 by Population Groups",results='hide',fig.keep='all', warning=FALSE, message=F}
+###Chart of outcome 12_1 by pop groups
+
+ggplot(outcome12_1, aes(x = pop_groups, y = mean_value, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  # Add labels for mean_value
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Outcome 12.1",
+    x = "Population Groups",
+    y = "Mean Value with Standard Errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  )
+
+
+
+
+```
+
+
+#### Core outcome 12.2 Proportion of people with access to a safe household toilet
+
+People with access to a safe household toilet are defined as those in households with improved sanitation facilities that are emptied safely and that are not shared with other households.
+
+*For more information, see [indicator guidance](https://intranet.unhcr.org/content/dam/unhcr/intranet/protection-operations/prog-hub/program-cycle/indictors/core/outcome/Core%20outcome%2012.2%20Proportion%20of%20people%20with%20access%20to%20a%20safe%20household%20toilet.pdf).*
+
+```{r, include=FALSE}
+####Standard tables 
+
+composite_outcome12_2 <- RMS_UGA_2024_main %>%
+  as_tibble() %>%  # Convert survey object to tibble
+  select(pop_groups, toi_cond1, toi_cond2, toi_cond3) %>%
+  pivot_longer(cols = c(toi_cond1, toi_cond2, toi_cond3),  # Pivot the three variables
+               names_to = "facility", 
+               values_to = "conditions") %>%
+  group_by(pop_groups, facility) %>%
+  summarise(percentage = mean(conditions, na.rm = TRUE) * 100) %>%
+  ungroup()
+```
+
+
+```{r fig32, echo=FALSE, fig.cap = "Access to a Safe Toilet",results='hide',fig.keep='all', warning=FALSE, message=F}
+###Chart for above with all dimensions 
+
+
+ggplot(composite_outcome12_2, aes(x = facility, y = percentage, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.7) +
+  geom_text(aes(label = sprintf("%.1f%%", percentage)), 
+            position = position_dodge(0.7), vjust = -0.5, size = 3.5) +  # Add percentage labels on bars
+  scale_fill_unhcr_d() +  # Use UNHCR color palette
+  scale_x_discrete(labels = c(
+    "toi_cond1" = "Improved sanitation facility",
+    "toi_cond2" = "Safe disposal in situ of excreta",
+    "toi_cond3" = "Toilet is not shared with other households"
+  )) +  # Add descriptive labels to the x-axis
+  labs(
+    title = "Access to a Safe Toilet",
+    x = "Improved Toilet",
+    y = "Percentage Access",
+    fill = "Population Groups"
+  ) +
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),  # Rotate x-axis labels for readability
+    strip.text = element_text(size = 10)  # Adjust label size
+  ) + 
+  scale_y_continuous(limits=c(0,100), expand = c(0,0)) ### limit if needed
+```
+
+
+```{r, include=FALSE}
+##Table by population groups
+
+RMS_UGA_2024_main <- main %>%
+  as_survey_design(
+    ids = NULL,          # Numeric or factor cluster IDs
+    strata = samp_strat,       # Strata as character or factor
+    weights = wgh_samp_pop_restr, # Numeric survey weights
+    nest = TRUE                # Use TRUE if PSUs are nested within strata
+  )
+
+RMS_UGA_2024_main_strata <- main %>%
+  as_survey_design(
+    ids = NULL,          # Numeric or factor cluster IDs
+    strata = samp_strat,       # Strata as character or factor
+    weights = wgh_strata_spec, # Numeric survey weights
+    nest = TRUE                # Use TRUE if PSUs are nested within strata
+  )
+
+
+
+outcome12_2 <- RMS_UGA_2024_main %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Show results disaggregated by pop groups
+  summarise(                                         # put all variables here
+    var_name = "outcome12_2",                          # name of the variable
+    num_obs_uw = unweighted(n()),                    # unweighted total count
+    denominator = survey_total(),                      # weighted total count
+    mean_value = survey_mean(outcome12_2, vartype = c("ci", "se"), na.rm = TRUE) # indicator value ( weighted) with CI and SE
+  )
+
+
+outcome12_2_strata <- RMS_UGA_2024_main_strata %>%
+  filter(!is.na(samp_strat)) %>%                     # Exclude if pop groups is NA
+  group_by(samp_strat) %>%                           # Show results disaggregated by pop groups
+  summarise(                                         # put all variables here
+    var_name = "outcome12_2",                          # name of the variable
+    num_obs_uw = unweighted(n()),                    # unweighted total count
+    denominator = survey_total(),                      # weighted total count
+    mean_value = survey_mean(outcome12_2, vartype = c("ci", "se"), na.rm = TRUE) # indicator value ( weighted) with CI and SE
+  )
+```
+
+
+```{r fig33, echo=FALSE, fig.cap = "Results of RBM Core Outcome 12.2 by Population Groups",results='hide',fig.keep='all', warning=FALSE, message=F}
+###Chart of outcome 12_2 by pop groups
+
+ggplot(outcome12_2_strata, aes(x = samp_strat, y = mean_value, fill = samp_strat)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  # Add labels for mean_value
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Outcome 12.2",
+    x = "Population Groups",
+    y = "Mean Value with Standard Errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  )
+
+
+
+```
+
+
+### Outcome area 13: Self Reliance, Economic Inclusion and Livelihoods
+
+#### Core outcome 13.1 Proportion of people with an account at a bank or other financial institution or with a mobile-money service provider
+
+People with an account[ at a bank or other financial institution or with a mobile-money-service provider](https://rstudio.unhcr.org/content/f09b1232-081a-4979-af60-b3dded5e77a8/Rmsdown_SSD_2023.html#proportion-of-people-with-an-account-at-a-bank-or-other-financial-institution-or-with-a-mobile-moneyservice-provider) are defined as those who report having an account (by themselves or together with someone else) at a bank or another type of financial institution or personally using a mobile money service in the past 12 months in the country of asylum or habitual residence (for returnees, countries of origin are included).
+
+*For more information, see [indicator guidance](https://intranet.unhcr.org/content/dam/unhcr/intranet/protection-operations/prog-hub/program-cycle/indictors/core/outcome/Core%20outcome%2013.1.%20Proportion%20of%20people%20with%20an%20account%20at%20a%20bank%20or%20other%20financial%20institution%20or%20mobile%20money.pdf).*
+
+
+```{r, include=FALSE}
+composite_outcome13_1 <- RMS_UGA_2024_main_resp %>%
+  as_tibble() %>%
+  select(pop_groups, BANK01, BANK02, BANK04, BANK05) %>%
+  pivot_longer(cols = c(BANK01, BANK02, BANK04, BANK05),
+               names_to = "access",
+               values_to = "conditions") %>%
+  mutate(conditions = as.numeric(as.character(conditions))) %>%  # Convert to numeric
+  group_by(pop_groups, access) %>%
+  summarise(percentage = mean(conditions, na.rm = TRUE) * 100, .groups = "drop")
+```
+
+
+```{r fig34, echo=FALSE, fig.cap = "Percentage of people with financial inclusion BY Population Groups",results='hide',fig.keep='all', warning=FALSE, message=F}
+###Chart for above with all dimensions 
+
+ggplot(composite_outcome13_1, aes(x = access, y = percentage, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.7) +  # Correct stat to "identity"
+  geom_text(aes(label = sprintf("%.1f%%", percentage)), 
+            position = position_dodge(0.7), vjust = -0.5, size = 3.5) +  # Add percentage labels on bars
+  scale_fill_unhcr_d() +  # Use UNHCR color palette
+  scale_x_discrete(labels = c(
+    "BANK01" = "Account in financial institution",
+    "BANK02" = "Have a ATM/debit card",
+    "BANK04" = "Used mobile money in the last 12 months",
+    "BANK05" = "Personally used mobile money in the last 12 months"
+  )) +  # Add descriptive labels to the x-axis
+  labs(
+    title = "Percentage of people with financial inclusion",
+    x = "Financial Inclusion",
+    y = "Percentage",
+    fill = "Population Groups"
+  ) +
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),  # Rotate x-axis labels for readability
+    strip.text = element_text(size = 10)  # Adjust label size
+  ) +
+  scale_y_continuous(limits = c(0, 100), expand = c(0, 0))  # Limit y-axis from 0 to 100%
+```
+
+
+```{r, include=FALSE}
+###Table standard 
+
+
+outcome13_1 <- RMS_UGA_2024_main_resp %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "outcome13_1",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(outcome13_1, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+
+
+
+outcome13_1_strata <- RMS_UGA_2024_main_strata_resp %>%
+  filter(!is.na(samp_strat)) %>%                     # Exclude if pop groups is NA
+  group_by(samp_strat) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "outcome13_1",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(outcome13_1, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+```
+
+
+
+```{r fig35, echo=FALSE, fig.cap = "Results of RBM Core Outcome 13.1 by Population Groups",results='hide',fig.keep='all', warning=FALSE, message=F}
+##Chart for the indicator above
+
+
+
+ggplot(outcome13_1, aes(x = pop_groups, y = mean_value, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Outcome 13.1",
+    x = "Population Groups",
+    y = "Mean Value with standard errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  )
+```
+
+
+```{r, include=FALSE}
+#### Table and chart that shows results by age/sex/diversity
+
+outcome13_1_AGD <- RMS_UGA_2024_main_resp %>%
+  filter( !is.na(disability) & !is.na(HH07_cat) & HH07 > 18) %>%  # Exclude HH07_cat categories 1, 2, and 5
+  group_by(pop_groups, HH04, disability, HH07_cat) %>%
+  summarise(
+    var_name = "outcome13_1",                                      # Name of the variable
+    num_obs_uw = survey_total(!is.na(outcome13_1), vartype = NULL),  # Unweighted total count
+    denominator = survey_total(),                                # Weighted total count
+    mean_value = survey_mean(outcome13_1, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with CI and SE
+  )
+
+
+
+
+```
+
+
+#### Core outcome 13.2 Proportion of people who self-report positive changes in their income compared to previous year
+
+People who self-report positive changes in their income compared to previous year are defined as those who state their income increased and who can also afford more goods and services, or those whose income remained the same or decreased but who can still afford more goods and services (to account for possible inflation).
+
+*For more information, see [indicator guidance](https://intranet.unhcr.org/content/dam/unhcr/intranet/protection-operations/prog-hub/program-cycle/indictors/core/outcome/Core%20outcome%2013.2%20Proportion%20of%20people%20who%20self-report%20positive%20changes%20in%20their%20income%20compared%20to%20previous%20year.pdf).*
+
+```{r, include=FALSE}
+###Check INC01 and INC02 
+
+
+
+# Define stove categories based on the provided list
+inc01_labels <- c(
+  "1" = "Increased compared to previous year",
+  "2" = "Been the same compared to previous year",
+  "3" = "Decreased compared to previous year"  
+)
+
+# Summarize the counts and percentages for each category
+INC01_percentages <- RMS_UGA_2024_main_resp %>%
+  as_tibble() %>%
+  filter(!is.na(INC01)) %>% 
+  group_by(pop_groups) %>%# Exclude missing values
+  count(INC01) %>%
+  mutate(Percentage = n / sum(n) * 100) %>%
+  mutate(INC01 = factor(INC01, levels = names(inc01_labels), labels = inc01_labels))
+```
+
+
+```{r fig36, echo=FALSE, fig.cap = "Changes in income in the last 12 months (INC01) by Population Groups",results='hide',fig.keep='all', warning=FALSE, message=F}
+# Create the chart
+
+ggplot(INC01_percentages, aes(x = reorder(INC01, Percentage), y = Percentage, fill = INC01)) +
+  geom_bar(stat = "identity", width = 0.7) +
+  geom_text(aes(label = sprintf("%.1f%%", Percentage)), 
+            position = position_stack(vjust = 0.5), size = 3.5) +  # Add percentage labels
+  coord_flip() +  # Flip the chart for better readability
+  labs(
+    title = "Changes in income in the last 12 months (INC01)",
+    x = "Changes to income",
+    y = "Percentage",
+    caption = "Source: RMS UGA 2024"
+  ) +
+  facet_wrap(~pop_groups) +
+  scale_fill_unhcr_d() +  # Apply UNHCR color palette
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.y = element_text(size = 10),  # Adjust text size for readability
+    legend.position = "none"  # Remove legend for simplicity
+  )
+```
+
+
+```{r, include=FALSE}
+###INC02
+
+
+
+
+# Define stove categories based on the provided list
+inc02_labels <- c(
+  "1" = "More",
+  "2" = "The same",
+  "3" = "Fewer"  
+)
+
+# Summarize the counts and percentages for each category
+
+
+INC02_percentages <- RMS_UGA_2024_main_resp %>%
+  as_tibble() %>%
+  filter(!is.na(INC02)) %>% 
+  group_by(pop_groups) %>%# Exclude missing values
+  count(INC02) %>%
+  mutate(Percentage = n / sum(n) * 100) %>%
+  mutate(INC02 = factor(INC02, levels = names(inc02_labels), labels = inc02_labels))
+```
+
+
+```{r fig37, echo=FALSE, fig.cap = "Can you afford fewer, the same or more goods?  (INC02) by Population Groups",results='hide',fig.keep='all', warning=FALSE, message=F}
+# Create the chart
+
+ggplot(INC02_percentages, aes(x = reorder(INC02, Percentage), y = Percentage, fill = INC02)) +
+  geom_bar(stat = "identity", width = 0.7) +
+  geom_text(aes(label = sprintf("%.1f%%", Percentage)), 
+            position = position_stack(vjust = 0.5), size = 3.5) +  # Add percentage labels
+  coord_flip() +  # Flip the chart for better readability
+  labs(
+    title = "Can you afford fewer, the same or more goods? (INC02)",
+    x = "Affordability",
+    y = "Percentage"
+  ) +
+  scale_fill_unhcr_d() + 
+  facet_wrap(~pop_groups) +# Apply UNHCR color palette
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.y = element_text(size = 10),  # Adjust text size for readability
+    legend.position = "none"  # Remove legend for simplicity
+  )
+```
+
+
+```{r, include=FALSE}
+###Table standard 
+
+
+
+outcome13_2 <- RMS_UGA_2024_main_resp %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "outcome13_2",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(outcome13_2, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+
+
+
+#by strata
+
+
+
+outcome13_2_strata <- RMS_UGA_2024_main_strata_resp %>%
+  filter(!is.na(samp_strat)) %>%                     # Exclude if pop groups is NA
+  group_by(samp_strat) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "outcome13_2",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(outcome13_2, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+```
+
+
+```{r fig38, echo=FALSE, fig.cap = "Results of RBM Core Outcome 13.2",results='hide',fig.keep='all', warning=FALSE, message=F}
+##Chart for the indicator above
+
+
+
+ggplot(outcome13_2, aes(x = pop_groups, y = mean_value, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Outcome 13.2",
+    x = "Population Groups",
+    y = "Mean Value with standard errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  )
+```
+
+
+```{r, include=FALSE}
+#### Table and chart that shows results by age/sex/diversity
+
+outcome13_2_AGD <- RMS_UGA_2024_main_resp %>%
+  filter( !is.na(disability) & !is.na(HH07_cat) & HH07 > 18) %>%  # Exclude HH07_cat categories 1, 2, and 5
+  group_by(pop_groups, HH07_cat, HH04, disability) %>%
+  summarise(
+    var_name = "outcome13_2",                                      # Name of the variable
+    num_obs_uw = survey_total(!is.na(outcome13_2), vartype = NULL),  # Unweighted total count
+    denominator = survey_total(),                                # Weighted total count
+    mean_value = survey_mean(outcome13_2, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with CI and SE
+  )
+
+
+```
+
+
+#### Core outcome 13.3 Proportion of people (working age) who are unemployed
+
+People who are unemployed are defined as those individuals in the labour force who were not in employment and seeking a job within 7 days prior to the reference date and who are available to start work within the next 14 days.
+
+Note that individuals who worked for pay or profit, even if only for one hour, in past 7 days, or who were temporarily absent from a job to which they will return are considered employed.
+
+*For more information, see [indicator guidance](https://intranet.unhcr.org/content/dam/unhcr/intranet/protection-operations/prog-hub/program-cycle/indictors/core/outcome/Core%20outcome%2013.3%20Proportion%20of%20people%20(working%20age)%20who%20are%20unemployed.pdf).*
+
+
+```{r, include=FALSE}
+outcome13_3 <- RMS_UGA_2024_main_resp %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "outcome13_3",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(outcome13_3, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+
+
+outcome13_3_strata <- RMS_UGA_2024_main_strata_resp %>%
+  filter(!is.na(samp_strat)) %>%                     # Exclude if pop groups is NA
+  group_by(samp_strat) %>%                           # Group by pop_groups
+  summarise(                                         # Summarise to compute values
+    var_name = "outcome13_3",                          # Name of the variable
+    num_obs_uw = unweighted(n()),                    # Unweighted total count
+    denominator = survey_total(),                    # Weighted total count
+    mean_value = survey_mean(outcome13_3, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with NA removed
+  )
+```
+
+
+```{r fig39, echo=FALSE, fig.cap = "Results of RBM Core Outcome 13.3 by Population Groups",results='hide',fig.keep='all', warning=FALSE, message=F}
+##Chart for the indicator above
+
+
+
+ggplot(outcome13_3, aes(x = pop_groups, y = mean_value, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Outcome 13.3",
+    x = "Population Groups",
+    y = "Mean Value with standard errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  )
+```
+
+
+```{r, include=FALSE}
+#### Table and chart that shows results by age/sex/diversity
+
+outcome13_3_AGD <- RMS_UGA_2024_main_resp %>%
+  filter(!is.na(disability) & !is.na(HH07_cat) & HH07 > 18) %>%  # Exclude HH07_cat categories 1, 2, and 5
+  group_by(HH07_cat, disability,pop_groups, HH04 ) %>%
+  summarise(
+    var_name = "outcome13_3",                                      # Name of the variable
+    num_obs_uw = survey_total(!is.na(outcome13_3), vartype = NULL),  # Unweighted total count
+    denominator = survey_total(),                                # Weighted total count
+    mean_value = survey_mean(outcome13_3, vartype = c("ci", "se"), na.rm = TRUE)  # Compute mean with CI and SE
+  )
+
+
+```
+
+### Outcome area 16: Local Integration and other Local Solutions
+
+#### Core outcome 16.1 Proportion of people with secure tenure rights to housing and/or land
+
+People with secure tenure rights to housing and/or land are defined as those in households with official documentation for both their housing and land and who are unlikely to experience losing their right to this housing and/or land in the next 12 months. The standard survey questions refer to both factual information regarding documentary evidence of tenure, and perceptions regarding the likelihood of one being evicted from land and/or housing.
+
+*For more information, see [indicator guidance](https://intranet.unhcr.org/content/dam/unhcr/intranet/protection-operations/prog-hub/program-cycle/indictors/core/outcome/Core%20outcome%2016.1%20Proportion%20of%20people%20with%20secure%20tenure%20rights%20to%20housing%20and-or%20land.pdf).*
+
+
+```{r, include=FALSE}
+outcome16_1 <- RMS_UGA_2024_main %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Show results disaggregated by pop groups
+  summarise(                                         # put all variables here
+    var_name = "outcome16_1",                          # name of the variable
+    num_obs_uw = unweighted(n()),                    # unweighted total count
+    denominator = survey_total(),                      # weighted total count
+    mean_value = survey_mean(outcome16_1, vartype = c("ci", "se"), na.rm = TRUE) # indicator value ( weighted) with CI and SE
+  )
+
+outcome16_1_strata <- RMS_UGA_2024_main_strata %>%
+  filter(!is.na(samp_strat)) %>%                     # Exclude if pop groups is NA
+  group_by(samp_strat) %>%                           # Show results disaggregated by pop groups
+  summarise(                                         # put all variables here
+    var_name = "outcome16_1",                          # name of the variable
+    num_obs_uw = unweighted(n()),                    # unweighted total count
+    denominator = survey_total(),                      # weighted total count
+    mean_value = survey_mean(outcome16_1, vartype = c("ci", "se"), na.rm = TRUE) # indicator value ( weighted) with CI and SE
+  )
+```
+
+
+```{r fig40, echo=FALSE, fig.cap = "Results of RBM Core Outcome 16.1 by Population Groups",results='hide',fig.keep='all', warning=FALSE, message=F}
+###Chart of impact 16_1 by pop groups
+
+ggplot(outcome16_1, aes(x = pop_groups, y = mean_value, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  # Add labels for mean_value
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Outcome 16.1",
+    x = "Population Groups",
+    y = "Mean Value with Standard Errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  )
+```
+
+
+```{r, include=FALSE}
+###Check on DWE10
+
+
+###Check on DWE10
+
+# Define DWE10 categories based on the provided list
+DWE10_labels <- c(
+  "1" = "Very unlikely",
+  "2" = "Somewhat unlikely",
+  "3" = "Somewhat likely",
+  "4" = "Very likely",
+  "99" = "Don't know"
+)
+
+
+# Summarize the counts and percentages for each category
+DWE10_percentages <- RMS_UGA_2024_main %>%
+  as_tibble() %>%
+  group_by(pop_groups) %>%
+  filter(!is.na(DWE10)) %>%  # Exclude missing values
+  count(DWE10) %>%
+  mutate(Percentage = n / sum(n) * 100)  # Calculate percentage based on total valid responses
+
+
+
+
+```
+
+
+```{r fig41, echo=FALSE, fig.cap = "Likelihood of losing housing/land in the next 12 months",results='hide',fig.keep='all', warning=FALSE, message=F}
+# Create the chart
+
+
+ggplot(DWE10_percentages, aes(x = reorder(DWE10, Percentage), y = Percentage, fill = DWE10)) +
+  geom_bar(stat = "identity", width = 0.7) +
+  geom_text(aes(label = sprintf("%.1f%%", Percentage)), 
+            position = position_stack(vjust = 0.5), size = 3.5) +  # Add percentage labels
+  coord_flip() +  # Flip the chart for better readability
+  labs(
+    title = "Likelihood of losing housing/land in the next 12 months",
+    x = "Likelihood",
+    y = "Percentage"
+  ) +
+  facet_wrap(~pop_groups)+
+  scale_fill_unhcr_d() +  # Apply UNHCR color palette
+  theme_unhcr() +  # Apply UNHCR theme
+  theme(
+    axis.text.y = element_text(size = 10),  # Adjust text size for readability
+    legend.position = "none"  # Remove legend for simplicity
+  )
+
+
+
+
+
+```
+
+
+#### Core outcome 16.2 Proportion of people covered by national social protection systems
+
+People covered by national social protection systems are defined as those in households where any household member has received any benefits from the national or local government social protection system in the country in the last 12 months.
+
+Types of social protection benefits and services are recorded and categorised under: social assistance, social insurance, social services or labour market policies.
+
+Note this indicator captures inclusion in programmes provided by the government and therefore does not capture assistance provided by UNHCR or other UN agencies.
+
+*For more information, see [indicator guidance](https://intranet.unhcr.org/content/dam/unhcr/intranet/protection-operations/prog-hub/program-cycle/indictors/core/outcome/Core%20outcome%2016.2%20Proportion%20of%20people%20covered%20by%20national%20social%20protection%20systems.pdf).*
+
+```{r, include=FALSE}
+outcome16_2 <- RMS_UGA_2024_main %>%
+  filter(!is.na(pop_groups)) %>%                     # Exclude if pop groups is NA
+  group_by(pop_groups) %>%                           # Show results disaggregated by pop groups
+  summarise(                                         # put all variables here
+    var_name = "outcome16_2",                          # name of the variable
+    num_obs_uw = unweighted(n()),                    # unweighted total count
+    denominator = survey_total(),                      # weighted total count
+    mean_value = survey_mean(outcome16_2, vartype = c("ci", "se"), na.rm = TRUE) # indicator value ( weighted) with CI and SE
+  )
+
+
+
+outcome16_2_strata <- RMS_UGA_2024_main_strata %>%
+  filter(!is.na(samp_strat)) %>%                     # Exclude if pop groups is NA
+  group_by(samp_strat) %>%                           # Show results disaggregated by pop groups
+  summarise(                                         # put all variables here
+    var_name = "outcome16_2",                          # name of the variable
+    num_obs_uw = unweighted(n()),                    # unweighted total count
+    denominator = survey_total(),                      # weighted total count
+    mean_value = survey_mean(outcome16_2, vartype = c("ci", "se"), na.rm = TRUE) # indicator value ( weighted) with CI and SE
+  )
+```
+
+
+```{r fig42, echo=FALSE, fig.cap = "Results of RBM Core Outcome 16.2 by Population Groups",results='hide',fig.keep='all', warning=FALSE, message=F}
+###Chart of impact 16_2 by pop groups
+
+ggplot(outcome16_2, aes(x = pop_groups, y = mean_value, fill = pop_groups)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_value - mean_value_se, ymax = mean_value + mean_value_se),
+                width = 0.2, position = position_dodge(0.7)) +
+  geom_text(aes(label = round(mean_value, 2)), 
+            vjust = -0.5, position = position_dodge(0.7)) +  # Add labels for mean_value
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  labs(
+    title = "Results of RBM Core Outcome 16.2",
+    x = "Population Groups",
+    y = "Mean Value with Standard Errors"
+  ) +
+  scale_fill_unhcr_d() +  # Use UNHCR color palette (requires unhcrthemes package)
+  theme_unhcr() +         # Apply UNHCR theme (requires unhcrthemes package)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels for better readability
+  )
+```
+
+
+```{r, include=FALSE}
+#### social protection services
+
+###Please delete/adjust response options accordingly for the chart
+
+# Define the mapping for SPF01 variables (social protection services)
+spf01_mapping <- c(
+  "SPF01a" = "The Public Service Pension Scheme",
+  "SPF01b" = "The National Social Security Fund, Workers Compensation",
+  "SPF01c" = "The Social Assistance Grants for Empowerment (SAGE)",
+  "SPF01d" = "Public Works Programmes",
+  "SPF01e" = "Social Care and Support Services"
+)
+
+# Step 2: Calculate the percentage of individuals receiving each service
+spf01_percentages <- main %>%
+  group_by(pop_groups) %>%  # Group by population group (e.g., gender, age group)
+  summarise(across(c(SPF01a, SPF01b, SPF01c, SPF01d, SPF01e), 
+                   ~ mean(. == "1", na.rm = TRUE) * 100)) %>%  # Ensure character comparison
+  pivot_longer(cols = -pop_groups,  # Exclude the PopGroup column from pivoting
+               names_to = "Service", 
+               values_to = "Percentage") %>%
+  mutate(Service = spf01_mapping[Service])  # Map column names to descriptive labels
+```
+
+
+```{r fig43, echo=FALSE, fig.cap = "Proportion of Individuals Covered by National Social Protection Systems",results='hide',fig.keep='all', warning=FALSE, message=F}
+# Step 3: Create the bar chart
+
+ggplot(spf01_percentages, aes(x = reorder(Service, Percentage), y = Percentage, fill = Service)) +
+  geom_bar(stat = "identity", width = 0.7, color = "white") +
+  
+  # Add percentage labels on bars
+  geom_text(aes(label = sprintf("%.1f%%", Percentage)), 
+            position = position_stack(vjust = 0.5), size = 3.5) +
+  
+  coord_flip() +  # Flip the axes for better readability
+  
+  # Labels and title
+  labs(
+    title = "Proportion of Individuals Covered by National Social Protection Systems",
+    x = "Social Protection Service",
+    y = "Percentage",
+    caption = "Note: Each service is calculated independently."
+  ) +
+  
+  scale_fill_unhcr_d() +  # Use UNHCR color palette
+  
+  theme_unhcr() +  # Apply UNHCR theme
+  
+  # Customize theme elements
+  theme(
+    axis.text.y = element_text(size = 9),  # Adjust text size for readability
+    legend.position = "none"  # Remove the legend for simplicity
+  ) +
+  
+  # Separate plots for each population group (e.g., gender, age group)
+  facet_wrap(~pop_groups, scales = "free_y", ncol = 1)  # Create separate plots per PopGroup
+
+
+
+```
+
+
+## Conclusions and Recommendations
+
+## RBM Core Indicators Summary Table
+
+###### [4.]{.big-num} Tables {.section-title}
+
+# Tables {.hide-h1}
+add tables from here
+
+## All needed tables
+
+```{r, include=FALSE}
+
+
+# Combine all indicators into one data frame
+combined_RBM_indicators <- bind_rows(
+  impact2_2,
+  impact2_3,
+  impact3_2a,
+  impact3_2b,
+  impact3_3,
+  outcome1_2,
+  outcome1_3,
+  outcome4_1,
+  outcome4_2,
+  outcome5_2,
+  outcome8_2,
+  outcome9_1,
+  outcome9_2,
+  outcome10_1,
+  outcome10_2,
+  outcome12_1,
+  outcome12_2,
+  outcome13_1,
+  outcome13_2,
+  outcome13_3,
+  outcome16_1,
+  outcome16_2
+)
+
+
+# Keep only the specified columns
+combined_RBM_indicators_table <- combined_RBM_indicators %>%
+  select(pop_groups, var_name, num_obs_uw,denominator, mean_value)
+
+# Split the combined table by population group
+tables_by_group <- combined_RBM_indicators_table %>%
+  group_by(pop_groups) %>%
+  group_split()
+
+combined_RBM_indicators_table <- combined_RBM_indicators %>%
+  select(pop_groups, var_name, num_obs_uw, denominator, mean_value) %>%
+  rename(
+    `Core Indicator` = var_name,
+    `Unweighted Count` = num_obs_uw,
+    `Weighted Total` = denominator,
+    `Indicator Value` = mean_value
+  )
+
+
+# Split the table into two based on population groups
+table_pop_group_1 <- combined_RBM_indicators_table %>%
+  filter(pop_groups == "Refugees and Asylum-seekers")
+
+table_pop_group_2 <- combined_RBM_indicators_table %>%
+  filter(pop_groups == "Host communities")
+
+
+
+```
+
+```{r, echo=FALSE}
+# Table for Population Group 1
+table_pop_group_1 %>%
+  kable(caption = "RMS Uganda 2024 - Indicators for Population Group 1") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+                full_width = FALSE, 
+                position = "center", 
+                font_size = 10)
+```
+
+```{r, echo=FALSE}
+
+# Table for Population Group 1
+table_pop_group_2 %>%
+  kable(caption = "RMS Uganda 2024 - Indicators for Population Group 2") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+                full_width = FALSE, 
+                position = "center", 
+                font_size = 10)
+
+```
+
